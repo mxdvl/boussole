@@ -12,3 +12,6 @@
 developer_key
 developer_key.pem
 developer_key.der
+
+# OS
+.DS_Store
