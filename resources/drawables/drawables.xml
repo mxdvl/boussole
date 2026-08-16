@@ -1,0 +1,7 @@
+<drawables>
+    <!--
+        Single launcher bitmap. The system scales this per device, so one
+        source image is enough for the whole product list.
+    -->
+    <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+</drawables>
