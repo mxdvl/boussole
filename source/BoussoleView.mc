@@ -46,17 +46,18 @@ class BoussoleView extends WatchUi.WatchFace {
         var font = resolveFont((screenRadius * 0.10).toNumber());
         var fontHeight = dc.getFontHeight(font);
 
-        // Short radial tick linking each arc end to its number.
-        var tick = 6.0;
+        // Visible connector length between an arc's end and its number.
+        var tickLen = 12.0;
+        var labelPad = fontHeight / 2.0 + 2.0;  // clearance from number centre to tick
 
-        // Number dials: outer hugs the rim, inner sits near the center.
-        var outerLabelR = screenRadius - fontHeight / 2.0 - 3.0;
-        var innerLabelR = screenRadius * 0.30 + fontHeight / 2.0;
+        // Number dials: outer a little in from the rim, inner near the centre.
+        var outerLabelR = screenRadius - fontHeight / 2.0 - 10.0;
+        var innerLabelR = screenRadius * 0.28;
 
-        // Arc band spans from just inside the outer numbers to just outside the
-        // inner numbers; rings are distributed evenly across it.
-        var arcOuter = outerLabelR - fontHeight / 2.0 - tick;
-        var arcInner = innerLabelR + fontHeight / 2.0 + tick;
+        // Arc band sits one tick length inside each number dial, so every tick
+        // spans arc -> number cleanly without crowding or overshooting.
+        var arcOuter = outerLabelR - labelPad - tickLen;
+        var arcInner = innerLabelR + labelPad + tickLen;
 
         var rings = collectRings();
         var n = rings.size();
@@ -69,6 +70,9 @@ class BoussoleView extends WatchUi.WatchFace {
                 rings[i].fraction(), rings[i].label
             );
         }
+
+        // Next sun event marked on the minutes ring (outer) and hours ring (inner).
+        drawNextSunEvent(dc, centerX, centerY, arcOuter, arcInner);
     }
 
     //! Prefer a small scalable vector font; fall back to the smallest system font.
@@ -203,5 +207,82 @@ class BoussoleView extends WatchUi.WatchFace {
     }
 
     function onExitSleep() as Void {
+    }
+
+    //! Find the next sun event (today's sunrise, else today's sunset, else
+    //! tomorrow's sunrise) and mark its local time on both clock rings: a
+    //! coloured radial line at the minute position on the outer ring and at the
+    //! hour position on the inner ring. Silently does nothing without a known
+    //! location or during polar day/night.
+    private function drawNextSunEvent(
+        dc as Graphics.Dc, cx as Numeric, cy as Numeric,
+        minuteArcR as Numeric, hourArcR as Numeric
+    ) as Void {
+        var posInfo = Position.getInfo();
+        var loc = posInfo.position;
+        if (loc == null) {
+            return;
+        }
+        var deg = loc.toDegrees();
+        var lat = deg[0];
+        var lon = deg[1];
+
+        var now = Time.now().value().toDouble();
+        var jd = SunCalc.julian(now);
+        var today = SunCalc.riseSet(jd, lat, lon);
+        if (today == null) {
+            return;
+        }
+        var rise = today[:rise];
+        var set = today[:set];
+        if (rise == null || set == null) {
+            return;
+        }
+
+        var eventUnix;
+        var color;
+        if (now < rise) {
+            eventUnix = rise;
+            color = SUNRISE_COLOR;
+        } else if (now < set) {
+            eventUnix = set;
+            color = SUNSET_COLOR;
+        } else {
+            var tomorrow = SunCalc.riseSet(jd + 1.0, lat, lon);
+            if (tomorrow == null) {
+                return;
+            }
+            var nextRise = tomorrow[:rise];
+            if (nextRise == null) {
+                return;
+            }
+            eventUnix = nextRise;
+            color = SUNRISE_COLOR;
+        }
+
+        var when = Gregorian.info(new Time.Moment(eventUnix.toNumber()), Time.FORMAT_SHORT);
+        var eh = when.hour;
+        var em = when.min;
+
+        drawEventMarker(dc, cx, cy, minuteArcR, em / 60.0, color);
+        drawEventMarker(dc, cx, cy, hourArcR, ((eh % 12) + em / 60.0) / 12.0, color);
+    }
+
+    //! A short coloured radial line crossing an arc at `fraction` of a turn
+    //! clockwise from 12 o'clock, marking an event's position on that ring.
+    private function drawEventMarker(
+        dc as Graphics.Dc, cx as Numeric, cy as Numeric,
+        arcRadius as Numeric, fraction as Float, color as Graphics.ColorValue
+    ) as Void {
+        var rad = Math.toRadians(90.0 - fraction * 360.0);
+        var cosA = Math.cos(rad);
+        var sinA = Math.sin(rad);
+        var half = RING_PEN + 4.0;
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(RING_PEN);
+        dc.drawLine(
+            cx + (arcRadius - half) * cosA, cy - (arcRadius - half) * sinA,
+            cx + (arcRadius + half) * cosA, cy - (arcRadius + half) * sinA
+        );
     }
 }
