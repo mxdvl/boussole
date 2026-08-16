@@ -8,6 +8,9 @@
 .jungle_cache/
 *.mssettings
 
+# Temporary preview build dir (run.sh)
+.preview/
+
 # Developer signing key (per-developer, never commit)
 developer_key
 developer_key.pem

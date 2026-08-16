@@ -1,0 +1,3 @@
+# Build configuration for the Boussole watch face.
+# The manifest declares products, entry point, and resources.
+project.manifest = manifest.xml
