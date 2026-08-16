@@ -17,9 +17,8 @@ if ! command -v resvg >/dev/null 2>&1; then
   exit 1
 fi
 
-# Placeholder size until the Venu 4 launcher-icon dimensions are confirmed
-# from the installed device's compiler.json.
-SIZE="${1:-60}"
+# Launcher-icon size for the Venu 4 (venu445mm compiler.json: 65x65).
+SIZE="${1:-65}"
 
 resvg -w "$SIZE" -h "$SIZE" assets/logo.svg resources/drawables/launcher_icon.png
 echo "generated resources/drawables/launcher_icon.png (${SIZE}x${SIZE})"
