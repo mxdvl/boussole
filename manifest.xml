@@ -23,8 +23,10 @@
             <iq:product id="venu445mm"/>
         </iq:products>
 
-        <!-- No special permissions are needed to show the time. -->
-        <iq:permissions/>
+        <!-- Positioning: read the last known location for sunrise/sunset. -->
+        <iq:permissions>
+            <iq:uses-permission id="Positioning"/>
+        </iq:permissions>
 
         <iq:languages>
             <iq:language>eng</iq:language>

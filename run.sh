@@ -39,5 +39,9 @@ if ! pgrep -if "connectiq" >/dev/null 2>&1; then
   sleep 3
 fi
 
+# monkeydo stays attached (it streams logs and holds the app open), which would
+# block callers like watch.sh forever. Kill any previous load so reloads don't
+# stack, then run it in the background and return.
+pkill -f "monkeydo" >/dev/null 2>&1 || true
 echo "loading onto simulator..."
-monkeydo "$OUT" "$DEVICE"
+monkeydo "$OUT" "$DEVICE" &
