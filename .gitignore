@@ -1,0 +1,14 @@
+# Connect IQ build output
+/bin/
+*.prg
+*.prg.debug.xml
+*.iq
+
+# SDK / editor
+.jungle_cache/
+*.mssettings
+
+# Developer signing key (per-developer, never commit)
+developer_key
+developer_key.pem
+developer_key.der
