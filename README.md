@@ -84,12 +84,14 @@ monkey.jungle                    # build config
 resources/strings/strings.xml    # app name
 resources/drawables/             # launcher icon + drawable defs
 source/BoussoleApp.mc            # Application entry point
-source/BoussoleView.mc           # WatchFace view: clears and draws each ring
-source/Face.mc                   # layout: centre, track radii, fonts, polar drawing helpers
-source/StepsRing.mc              # steps arc near the rim
-source/TimeRing.mc               # time arc, hour points, hour/minute ticks, sun marker
-source/SunEvent.mc               # next sunrise/sunset at the last known location
-source/SunCalc.mc                # sunrise equation (pure maths)
+source/BoussoleView.mc           # reads the device, builds the scene, renders it
+source/Layout.mc                 # track radii and polar maths, from screen size
+source/Shapes.mc                 # plain drawing records (Arc, Line, Dot, Box)
+source/StepsRing.mc              # pure: steps arc at the rim
+source/TimeRing.mc               # pure: arc between the hands, hour points, ticks, sun marker
+source/Numerals.mc               # pure: roman numerals as strokes
+source/SunCalc.mc                # pure: sunrise equation + next sun event
+source/Render.mc                 # the only code that draws
 ```
 
 ## Notes / next steps

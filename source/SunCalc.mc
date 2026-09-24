@@ -9,6 +9,55 @@ module SunCalc {
 
     const DEG = Math.PI / 180.0;
 
+    //! A sunrise or sunset, at a local time of day.
+    class Event {
+        public var minuteOfDay as Number;
+        public var isSunrise as Boolean;
+
+        function initialize(minuteOfDay as Number, isSunrise as Boolean) {
+            self.minuteOfDay = minuteOfDay;
+            self.isSunrise = isSunrise;
+        }
+    }
+
+    //! The next sun event after `nowUnix` at (`latDeg`, `lonDeg`): today's
+    //! sunrise, else today's sunset, else tomorrow's sunrise. `utcOffset` is
+    //! the local offset in seconds (DST included), used for the time of day.
+    //! Null during polar day/night.
+    function nextEvent(nowUnix as Double, latDeg as Double, lonDeg as Double, utcOffset as Number) as Event? {
+        var jd = julian(nowUnix);
+        var today = riseSet(jd, latDeg, lonDeg);
+        if (today == null) {
+            return null;
+        }
+        var rise = today[:rise];
+        var set = today[:set];
+        if (rise == null || set == null) {
+            return null;
+        }
+        if (nowUnix < rise) {
+            return new Event(localMinuteOfDay(rise, utcOffset), true);
+        }
+        if (nowUnix < set) {
+            return new Event(localMinuteOfDay(set, utcOffset), false);
+        }
+
+        var tomorrow = riseSet(jd + 1.0, latDeg, lonDeg);
+        if (tomorrow == null) {
+            return null;
+        }
+        var nextRise = tomorrow[:rise];
+        if (nextRise == null) {
+            return null;
+        }
+        return new Event(localMinuteOfDay(nextRise, utcOffset), true);
+    }
+
+    //! Local minute of the day (0-1439) for a moment in Unix seconds.
+    function localMinuteOfDay(unixSeconds as Double, utcOffset as Number) as Number {
+        return (((unixSeconds.toLong() + utcOffset) / 60) % 1440).toNumber();
+    }
+
     //! Julian date for a moment given as Unix seconds.
     function julian(unixSeconds as Double) as Double {
         return unixSeconds / 86400.0 + 2440587.5;

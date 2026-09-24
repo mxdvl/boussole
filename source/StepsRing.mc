@@ -1,4 +1,3 @@
-import Toybox.ActivityMonitor;
 import Toybox.Graphics;
 import Toybox.Lang;
 
@@ -6,23 +5,16 @@ import Toybox.Lang;
 //! today's step goal. No tick, no number.
 module StepsRing {
 
-    const DEFAULT_GOAL = 10000;
-
-    function draw(dc as Graphics.Dc, face as Face) as Void {
-        var info = ActivityMonitor.getInfo();
-        var steps = 0;
-        var s = info.steps;
-        if (s != null) {
-            steps = s;
+    function scene(layout as Layout, steps as Number, goal as Number) as Array<Shapes.Shape> {
+        var fraction = steps.toFloat() / goal.toFloat();
+        if (fraction > 1.0) {
+            fraction = 1.0;
         }
-        var goal = DEFAULT_GOAL;
-        var g = info.stepGoal;
-        if (g != null && g > 0) {
-            goal = g;
-        }
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(face.pen);
-        face.drawSweep(dc, face.stepsR, steps.toFloat() / goal.toFloat());
+        return [
+            new Shapes.Arc(
+                layout.cx, layout.cy, layout.stepsR, 0.0, fraction,
+                Graphics.COLOR_WHITE, layout.pen
+            ),
+        ] as Array<Shapes.Shape>;
     }
 }

@@ -1,84 +1,107 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
-import Toybox.System;
-import Toybox.Time;
-import Toybox.Time.Gregorian;
 
-//! The clock: a single arc on the 12-hour scale, filled clockwise from
-//! 12 o'clock to the current time (the path an hour hand has travelled).
+//! The clock: a single arc between the hour hand and the minute hand, on the
+//! 12-hour scale.
 //!
-//! - Hours: an inward tick at the arc's end, pointing to the hour printed on
-//!   the inner track (`face.hourLabelR`).
-//! - Minutes: an outward tick at minute/60 of a turn, pointing to the minutes
-//!   printed on the outer track (`face.minuteLabelR`).
-//! - 12 hour points along the track: XII, III, VI and IX as numerals (unless a
-//!   tick lands on one), dots elsewhere. Points the arc has passed are cut out
-//!   of it as small gaps.
+//! The minute hand laps the hour hand every 12/11 h (~65.5 min). On even laps
+//! the arc runs clockwise from the hour to the minute, so it fills from nothing
+//! to a full circle; on odd laps it runs from the minute to the hour, so it
+//! empties again. The laps start at midnight (22 per day), so the arc never
+//! jumps.
+//!
+//! - Hours: an inward tick at the hour hand's position.
+//! - Minutes: an outward tick at the minute hand's position.
+//! - 12 hour points along the track: XII, III, VI and IX as stroked numerals
+//!   that cut through the arc (unless a tick lands on one), dots elsewhere.
+//!   Dots under the arc are cut out of it as small notches.
 //! - The next sunrise (orange) or sunset (blue) crosses the track in colour.
 module TimeRing {
 
+    const TURN = 720;  // minutes in one turn of the hour hand
+
+    const ARC_COLOR = Graphics.COLOR_WHITE;
+    const POINT_COLOR = Graphics.COLOR_LT_GRAY;
     const SUNRISE_COLOR = Graphics.COLOR_ORANGE;
     const SUNSET_COLOR = Graphics.COLOR_BLUE;
-    const POINT_COLOR = Graphics.COLOR_LT_GRAY;
 
-    function draw(dc as Graphics.Dc, face as Face) as Void {
-        var clock = System.getClockTime();
-        var hour = clock.hour % 12;
-        var minute = clock.min;
-        var hourFraction = (hour + minute / 60.0) / 12.0;
-        var minuteFraction = minute / 60.0;
+    //! Everything on the time track for local time `minuteOfDay` (0-1439).
+    function scene(layout as Layout, minuteOfDay as Number, sun as SunCalc.Event?) as Array<Shapes.Shape> {
+        var hourAt = (minuteOfDay % TURN) / TURN.toFloat();
+        var minuteAt = (minuteOfDay % 60) / 60.0;
+        var span = arcSpan(minuteOfDay);
 
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(face.pen);
-        face.drawSweep(dc, face.timeR, hourFraction);
-
-        drawHourPoints(dc, face, hourFraction, minuteFraction);
-        drawSunEvent(dc, face);
-
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(face.pen);
-
-        // Hours: inward tick from the arc's end to the inner track.
-        var hourText = (hour == 0 ? 12 : hour).format("%02d");
-        face.drawRadial(dc, hourFraction, face.timeR, face.hourLabelR + face.labelGap);
-        face.drawTextAt(dc, hourFraction, face.hourLabelR, face.labelFont, hourText);
-
-        // Minutes: outward tick from the track to the outer track.
-        face.drawRadial(dc, minuteFraction, face.timeR, face.minuteLabelR - face.labelGap);
-        face.drawTextAt(dc, minuteFraction, face.minuteLabelR, face.labelFont, minute.format("%02d"));
+        var out = [
+            new Shapes.Arc(layout.cx, layout.cy, layout.timeR, span[0], span[1], ARC_COLOR, layout.pen),
+        ] as Array<Shapes.Shape>;
+        out.addAll(hourPoints(layout, span[0], span[1], hourAt, minuteAt));
+        if (sun != null) {
+            out.add(sunMarker(layout, sun));
+        }
+        out.add(layout.radial(hourAt, layout.timeR, layout.timeR - layout.tickLen, ARC_COLOR, layout.pen));
+        out.add(layout.radial(minuteAt, layout.timeR, layout.timeR + layout.tickLen, ARC_COLOR, layout.pen));
+        return out;
     }
 
-    //! The 12 hour points on the time track. A numeral is drawn over a black
-    //! box so it cuts through the arc; it gives way to a plain point when either
-    //! tick would run into it.
-    function drawHourPoints(
-        dc as Graphics.Dc, face as Face,
-        hourFraction as Float, minuteFraction as Float
-    ) as Void {
+    //! The arc between the hands as [start, sweep], fractions of a turn. Works
+    //! in whole 1/720ths of a turn (one minute of the hour hand) so the lap
+    //! boundaries are exact.
+    function arcSpan(minuteOfDay as Number) as [Float, Float] {
+        var hour = minuteOfDay % TURN;
+        var minute = (minuteOfDay % 60) * 12;
+        var lap = minuteOfDay * 11 / TURN;
+
+        if (lap % 2 == 0) {
+            // Filling: hour -> minute.
+            return [hour / TURN.toFloat(), mod(minute - hour, TURN) / TURN.toFloat()];
+        }
+        // Emptying: minute -> hour. At the lap's first instant the hands meet
+        // and the arc is still full.
+        var sweep = mod(hour - minute, TURN);
+        return [minute / TURN.toFloat(), (sweep == 0 ? TURN : sweep) / TURN.toFloat()];
+    }
+
+    //! The 12 hour points. A numeral sits on a black box that cuts through the
+    //! arc; it gives way to a plain point when either tick lands on it.
+    function hourPoints(
+        layout as Layout, start as Float, sweep as Float,
+        hourAt as Float, minuteAt as Float
+    ) as Array<Shapes.Shape> {
+        var out = [] as Array<Shapes.Shape>;
+        var pad = layout.pen;
+
         for (var k = 0; k < 12; k++) {
             var f = k / 12.0;
+            var x = layout.xAt(layout.timeR, f);
+            var y = layout.yAt(layout.timeR, f);
             var text = numeral(k);
 
             if (text != null) {
-                var halfWidth = dc.getTextWidthInPixels(text, face.numeralFont) / 2.0 + face.pen;
-                var tolerance = halfWidth / (2.0 * Math.PI * face.timeR);
-                if (!isNear(f, hourFraction, tolerance) && !isNear(f, minuteFraction, tolerance)) {
-                    dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-                    face.drawTextAt(dc, f, face.timeR, face.numeralFont, text);
+                var w = Numerals.width(text, layout.numeralH);
+                var tolerance = (w / 2.0 + pad) / (2.0 * Math.PI * layout.timeR);
+                if (!isNear(f, hourAt, tolerance) && !isNear(f, minuteAt, tolerance)) {
+                    out.add(new Shapes.Box(x, y, w + 2.0 * pad, layout.numeralH + 2.0 * pad, Graphics.COLOR_BLACK));
+                    out.addAll(Numerals.lines(text, x, y, layout.numeralH, ARC_COLOR, layout.numeralPen));
                     continue;
                 }
             }
 
-            if (f < hourFraction) {
-                // Passed: a notch cut out of the arc.
-                dc.setColor(Graphics.COLOR_BLACK, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(face.xAt(face.timeR, f), face.yAt(face.timeR, f), face.pen);
+            if (isWithin(f, start, sweep)) {
+                out.add(new Shapes.Dot(x, y, layout.pen, Graphics.COLOR_BLACK));
             } else {
-                dc.setColor(POINT_COLOR, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(face.xAt(face.timeR, f), face.yAt(face.timeR, f), face.pen / 2.0);
+                out.add(new Shapes.Dot(x, y, layout.pen / 2.0, POINT_COLOR));
             }
         }
+        return out;
+    }
+
+    //! A short coloured stroke across the track at the sun event's time.
+    function sunMarker(layout as Layout, sun as SunCalc.Event) as Shapes.Line {
+        var at = (sun.minuteOfDay % TURN) / TURN.toFloat();
+        var half = layout.pen + 4.0;
+        var color = sun.isSunrise ? SUNRISE_COLOR : SUNSET_COLOR;
+        return layout.radial(at, layout.timeR - half, layout.timeR + half, color, layout.pen);
     }
 
     //! Roman numeral for the quarter hours, null for the others.
@@ -92,8 +115,17 @@ module TimeRing {
         }
     }
 
-    //! Whether two positions (fractions of a turn) are within `tolerance` of
-    //! each other, going either way round the dial.
+    //! Whether position `f` lies on the arc from `start` clockwise for `sweep`.
+    function isWithin(f as Float, start as Float, sweep as Float) as Boolean {
+        var d = f - start;
+        if (d < 0.0) {
+            d += 1.0;
+        }
+        return d < sweep;
+    }
+
+    //! Whether two positions are within `tolerance` of each other, either way
+    //! round the dial.
     function isNear(a as Float, b as Float, tolerance as Float) as Boolean {
         var d = a - b;
         if (d < 0.0) {
@@ -105,18 +137,8 @@ module TimeRing {
         return d < tolerance;
     }
 
-    //! A short coloured line across the time track at the next sun event.
-    function drawSunEvent(dc as Graphics.Dc, face as Face) as Void {
-        var event = SunEvent.next();
-        if (event == null) {
-            return;
-        }
-        var when = Gregorian.info(event.moment, Time.FORMAT_SHORT);
-        var fraction = ((when.hour % 12) + when.min / 60.0) / 12.0;
-        var half = face.pen + 4.0;
-
-        dc.setColor(event.isSunrise ? SUNRISE_COLOR : SUNSET_COLOR, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(face.pen);
-        face.drawRadial(dc, fraction, face.timeR - half, face.timeR + half);
+    //! `a` modulo `n`, always in [0, n).
+    function mod(a as Number, n as Number) as Number {
+        return ((a % n) + n) % n;
     }
 }
