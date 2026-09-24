@@ -25,17 +25,18 @@ module TimeRing {
         return shapes;
     }
 
-    //! The Always-On scene: the time arc and hour bar in _brume_ instead of
-    //! _craie_, plus the quarter gaps - an _encre_ cut is free to keep, since
-    //! it removes lit pixels rather than adding them. Everything else -
-    //! numerals, dots, the _brume_ tick inside each gap - is dropped, to stay
-    //! well inside the low-power luminance budget.
+    //! The Always-On scene: the time arc, hour bar, and hour points (numerals
+    //! and dots) in _brume_ instead of _craie_, plus the quarter gaps - an
+    //! _encre_ cut is free to keep, since it removes lit pixels rather than
+    //! adding them. The quarter ticks inside those gaps are left out: the cut
+    //! alone keeps the quarter legible, without the extra ink.
     function aodScene(layout as Layout, minuteOfDay as Number) as Array<Shapes.Shape> {
         var span = ClockArc.span(minuteOfDay);
         var currentHour = (minuteOfDay % ClockArc.TURN) / 60;
         var quarters = passedQuarters(span[0], span[1], currentHour, (minuteOfDay % 60) / 60.0);
 
-        var shapes = ClockArc.shapes(layout, layout.timeRadius, minuteOfDay, Palette.BRUME);
+        var shapes = hourPoints(layout, span[0], span[1], currentHour);
+        shapes.addAll(ClockArc.shapes(layout, layout.timeRadius, minuteOfDay, Palette.BRUME));
         shapes.addAll(quarterGaps(layout, layout.timeRadius, quarters));
         return shapes;
     }
@@ -99,8 +100,8 @@ module TimeRing {
     }
 
     //! A thin _brume_ tick inside each gap `quarterGaps` cuts, marking the
-    //! quarter itself. Not included in `aodScene`, since _brume_ is dropped
-    //! there to stay inside the low-power luminance budget.
+    //! quarter itself. Left out of `aodScene`: the gap cut alone keeps the
+    //! quarter legible there, without the extra ink.
     function quarterTicks(layout as Layout, radius as Float, positions as Array<Float>) as Array<Shapes.Shape> {
         var shapes = [] as Array<Shapes.Shape>;
         var innerRadius = radius - layout.capReach;
