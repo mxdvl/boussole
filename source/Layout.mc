@@ -86,4 +86,17 @@ class Layout {
             color, 2.0 * reach
         );
     }
+
+    //! A straight radial stroke at `fraction` of a turn, from `innerRadius` to
+    //! `outerRadius`.
+    function radial(
+        fraction as Float, innerRadius as Float, outerRadius as Float,
+        color as Graphics.ColorType, strokeWidth as Float
+    ) as Shapes.Line {
+        return new Shapes.Line(
+            xAt(innerRadius, fraction), yAt(innerRadius, fraction),
+            xAt(outerRadius, fraction), yAt(outerRadius, fraction),
+            color, strokeWidth
+        );
+    }
 }

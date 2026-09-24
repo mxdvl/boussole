@@ -6,7 +6,7 @@ module Palette {
     //! Craie ("chalk"): the main time arc and its hour bar.
     const CRAIE = Graphics.COLOR_WHITE;
 
-    //! Encre ("ink"): the background, and the quarter notches cut into the arc.
+    //! Encre ("ink"): the background, and the gaps cut across the arc at the quarters.
     const ENCRE = Graphics.COLOR_BLACK;
 
     //! Brume ("mist"): a soft teal-blue grey for everything secondary - hour
