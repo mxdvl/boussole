@@ -15,7 +15,6 @@ module TimeRing {
         var currentHour = (minuteOfDay % ClockArc.TURN) / 60;
         var shapes = hourPoints(layout, span[0], span[1], currentHour);
         shapes.addAll(ClockArc.shapes(layout, layout.timeRadius, minuteOfDay, Palette.CRAIE));
-        shapes.addAll(quarterNotches(layout, span[0], span[1], currentHour));
         return shapes;
     }
 
@@ -40,27 +39,6 @@ module TimeRing {
                 ));
             } else {
                 shapes.add(new Shapes.Dot(pointX, pointY, layout.penWidth / 2.0, Palette.BRUME));
-            }
-        }
-        return shapes;
-    }
-
-    //! Half-round notches in the arc's outer edge at the quarters it covers,
-    //! except the current hour's: encre dots centred on the outer edge, as
-    //! wide as the arc, so each cuts in to the arc's centre line. (A dot
-    //! inside the arc showed every sub-pixel misplacement; a notch hides it.)
-    function quarterNotches(
-        layout as Layout, start as Float, sweep as Float, currentHour as Number
-    ) as Array<Shapes.Shape> {
-        var shapes = [] as Array<Shapes.Shape>;
-        var edgeRadius = layout.timeRadius + layout.arcWidth / 2.0;
-        for (var hour = 0; hour < 12; hour += 3) {
-            var position = hour / 12.0;
-            if (hour != currentHour && isCovered(position, start, sweep)) {
-                shapes.add(new Shapes.Dot(
-                    layout.xAt(edgeRadius, position), layout.yAt(edgeRadius, position),
-                    layout.arcWidth / 2.0, Palette.ENCRE
-                ));
             }
         }
         return shapes;
