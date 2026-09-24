@@ -2,8 +2,9 @@
 
 A custom Garmin Connect IQ **watch face**, built with the Monkey C SDK.
 
-Current state: base analog face showing the time with standard hour and
-minute hands over a 12-tick dial. Named _boussole_ ("compass" in French) —
+Current state: concentric rings filling clockwise from 12 o'clock — a steps
+arc at the rim, and a single 12-hour time arc with an outward tick to the
+minutes and an inward tick to the hour. Named _boussole_ ("compass" in French) —
 the design will grow toward a compass theme.
 
 ## Target devices
@@ -83,7 +84,12 @@ monkey.jungle                    # build config
 resources/strings/strings.xml    # app name
 resources/drawables/             # launcher icon + drawable defs
 source/BoussoleApp.mc            # Application entry point
-source/BoussoleView.mc           # WatchFace view (dial + hands)
+source/BoussoleView.mc           # WatchFace view: clears and draws each ring
+source/Face.mc                   # layout: centre, track radii, fonts, polar drawing helpers
+source/StepsRing.mc              # steps arc near the rim
+source/TimeRing.mc               # time arc, hour points, hour/minute ticks, sun marker
+source/SunEvent.mc               # next sunrise/sunset at the last known location
+source/SunCalc.mc                # sunrise equation (pure maths)
 ```
 
 ## Notes / next steps
