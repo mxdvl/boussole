@@ -13,6 +13,15 @@ import Toybox.Math;
 //! (0.25 = 3 o'clock, 0.5 = 6 o'clock).
 class Layout {
 
+    // Tuning. Sizes in px; proportions are of the screen's radius.
+    private const EDGE_MARGIN = 2.0;        // hour cap's outer end to the screen edge
+    private const CAP_REACH = 0.035;        // hour cap, either side of the arc
+    private const ARC_WIDTH = 6.0;          // time arc and hour cap thickness
+    private const PEN_WIDTH = 3.0;          // steps arc and sun marker
+    private const NUMERAL_HEIGHT = 0.075;
+    private const NUMERAL_PEN_WIDTH = 2.0;
+    private const STEPS_GAP = 8.0;          // hour cap's inner end to the steps arc
+
     public var centreX as Float;
     public var centreY as Float;
 
@@ -31,14 +40,14 @@ class Layout {
         centreX = screenWidth / 2.0;
         centreY = screenHeight / 2.0;
 
-        arcWidth = 6.0;
-        penWidth = 3.0;
-        numeralPenWidth = 2.0;
-        numeralHeight = screenRadius * 0.075;
-        capReach = screenRadius * 0.05;
+        arcWidth = ARC_WIDTH;
+        penWidth = PEN_WIDTH;
+        numeralPenWidth = NUMERAL_PEN_WIDTH;
+        numeralHeight = screenRadius * NUMERAL_HEIGHT;
+        capReach = screenRadius * CAP_REACH;
 
-        timeRadius = screenRadius - capReach - 6.0;
-        stepsRadius = timeRadius - capReach - penWidth - 8.0;
+        timeRadius = screenRadius - EDGE_MARGIN - capReach;
+        stepsRadius = timeRadius - capReach - STEPS_GAP - penWidth / 2.0;
     }
 
     //! Screen x of the point `radius` from the centre at `fraction` of a turn.
