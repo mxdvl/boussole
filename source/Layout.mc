@@ -18,7 +18,7 @@ class Layout {
     private const EDGE_MARGIN = 2.0;        // hour cap's outer end to the screen edge
     private const CAP_REACH = 0.035;        // hour cap, either side of the arc
     private const ARC_WIDTH = 6.0;          // clock arcs and hour bars
-    private const PEN_WIDTH = 3.0;          // hour dots
+    private const PEN_WIDTH = 4.0;          // hour dots
     private const NUMERAL_HEIGHT = 0.075;
     private const NUMERAL_PEN_WIDTH = 2.0;
     private const TRACK_GAP = 14.0;         // between the hour bars of neighbouring rings
