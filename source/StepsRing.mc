@@ -1,8 +1,7 @@
-import Toybox.Graphics;
 import Toybox.Lang;
 
-//! Steps: a bare arc inside the numerals, filled clockwise from 12 o'clock towards
-//! today's step goal. No tick, no number.
+//! Steps, in the same style as the clock rings: a brume arc with its hour bar
+//! anchored at XII, filling clockwise towards today's step goal.
 module StepsRing {
 
     function scene(layout as Layout, steps as Number, goal as Number) as Array<Shapes.Shape> {
@@ -13,8 +12,9 @@ module StepsRing {
         return [
             new Shapes.Arc(
                 layout.centreX, layout.centreY, layout.stepsRadius, 0.0, progress,
-                Graphics.COLOR_WHITE, layout.penWidth
+                Palette.BRUME, layout.arcWidth
             ),
+            layout.bar(0.0, layout.stepsRadius, layout.capReach, layout.arcWidth, Palette.BRUME),
         ] as Array<Shapes.Shape>;
     }
 }

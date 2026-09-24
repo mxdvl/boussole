@@ -10,6 +10,6 @@ module Palette {
     const ENCRE = Graphics.COLOR_BLACK;
 
     //! Brume ("mist"): a soft teal-blue grey for everything secondary - hour
-    //! points, numerals, and the sun ring.
+    //! points, numerals, the sun ring and the steps ring.
     const BRUME = 0x88A4AC;
 }

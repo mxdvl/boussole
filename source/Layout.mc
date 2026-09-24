@@ -8,7 +8,7 @@ import Toybox.Math;
 //!   timeRadius     current time and its 12 hour points, close to the rim;
 //!                  the hour bar crosses it, reaching capReach either side
 //!   sunRadius      next sunrise or sunset, one bar length + TRACK_GAP further in
-//!   stepsRadius    steps arc, clear of the sun ring's hour bar
+//!   stepsRadius    steps ring, the same step in again
 //!
 //! A position on a track is a fraction of a turn clockwise from 12 o'clock
 //! (0.25 = 3 o'clock, 0.5 = 6 o'clock).
@@ -18,17 +18,16 @@ class Layout {
     private const EDGE_MARGIN = 2.0;        // hour cap's outer end to the screen edge
     private const CAP_REACH = 0.035;        // hour cap, either side of the arc
     private const ARC_WIDTH = 6.0;          // clock arcs and hour bars
-    private const PEN_WIDTH = 3.0;          // steps arc and hour dots
+    private const PEN_WIDTH = 3.0;          // hour dots
     private const NUMERAL_HEIGHT = 0.075;
     private const NUMERAL_PEN_WIDTH = 2.0;
-    private const TRACK_GAP = 6.0;          // between the hour bars of neighbouring clock tracks
-    private const STEPS_GAP = 8.0;          // sun ring's hour bar inner end to the steps arc
+    private const TRACK_GAP = 14.0;         // between the hour bars of neighbouring rings
 
     public var centreX as Float;
     public var centreY as Float;
 
     public var arcWidth as Float;         // clock arcs and hour bars, px
-    public var penWidth as Float;         // steps arc and hour dots, px
+    public var penWidth as Float;         // hour dots, px
     public var numeralPenWidth as Float;  // roman numeral strokes, px
     public var numeralHeight as Float;    // px
     public var capReach as Float;         // hour cap, px either side of the arc
@@ -52,7 +51,7 @@ class Layout {
         var trackStep = 2.0 * capReach + TRACK_GAP;
         timeRadius = screenRadius - EDGE_MARGIN - capReach;
         sunRadius = timeRadius - trackStep;
-        stepsRadius = sunRadius - capReach - STEPS_GAP - penWidth / 2.0;
+        stepsRadius = sunRadius - trackStep;
     }
 
     //! Screen x of the point `radius` from the centre at `fraction` of a turn.

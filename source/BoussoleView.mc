@@ -13,7 +13,7 @@ import Toybox.WatchUi;
 //!        TimeRing   near the rim: the current time as a `ClockArc`, with
 //!                   hour points and numerals
 //!        SunRing    the next sunrise or sunset as a `ClockArc`
-//!        StepsRing  bare inner arc: progress towards the step goal
+//!        StepsRing  progress towards the step goal, bar anchored at XII
 //!   3. `Render` draws the scene
 class BoussoleView extends WatchUi.WatchFace {
 

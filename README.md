@@ -6,7 +6,8 @@ Current state: concentric rings. Near the rim, the current time as an arc
 between the (pinned) hour hand and the minute hand, which fills on one
 65-minute lap and empties on the next, with a bar across the hour end and
 stroke-drawn XII/III/VI/IX on its track. Inside it, the next sunrise or
-sunset in the same style, then a steps arc.
+sunset in the same style, then steps in the same
+style, anchored at XII.
 Named _boussole_ ("compass" in French) —
 the design will grow toward a compass theme.
 
@@ -121,7 +122,7 @@ source/Palette.mc                # named colours (craie, encre, brume)
 source/ClockArc.mc               # pure: one time as an arc between the hands + hour bar
 source/TimeRing.mc               # pure: current time, hour points, numerals
 source/SunRing.mc                # pure: next sunrise or sunset as a clock arc
-source/StepsRing.mc              # pure: inner steps arc
+source/StepsRing.mc              # pure: steps ring, anchored at XII
 source/Numerals.mc               # pure: roman numerals as strokes
 source/SunCalc.mc                # pure: sunrise equation + next sun event
 source/Render.mc                 # the only code that draws
