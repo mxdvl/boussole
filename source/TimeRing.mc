@@ -1,6 +1,6 @@
 import Toybox.Lang;
 
-//! The current time, near the rim: a `ClockArc` in chalk, and the 12 hour
+//! The current time, near the rim: a `ClockArc` in craie, and the 12 hour
 //! points along its track in brume.
 //!
 //! - Uncovered points: XII, III, VI and IX as numerals, dots for the rest.
@@ -13,7 +13,7 @@ module TimeRing {
         var span = ClockArc.span(minuteOfDay);
         var currentHour = (minuteOfDay % ClockArc.TURN) / 60;
         var shapes = hourPoints(layout, span[0], span[1], currentHour);
-        shapes.addAll(ClockArc.shapes(layout, layout.timeRadius, minuteOfDay, Palette.CHALK));
+        shapes.addAll(ClockArc.shapes(layout, layout.timeRadius, minuteOfDay, Palette.CRAIE));
         shapes.addAll(quarterDots(layout, span[0], span[1], currentHour));
         return shapes;
     }

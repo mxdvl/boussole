@@ -12,7 +12,7 @@ import Toybox.WatchUi;
 //!   2. build a scene: pure functions turn those values into `Shapes`
 //!        TimeRing   near the rim: the current time as a `ClockArc`, with
 //!                   hour points and numerals
-//!        SunRings   the next sunrise and sunset, each as a `ClockArc`
+//!        SunRing    the next sunrise or sunset as a `ClockArc`
 //!        StepsRing  bare inner arc: progress towards the step goal
 //!   3. `Render` draws the scene
 class BoussoleView extends WatchUi.WatchFace {
@@ -33,7 +33,7 @@ class BoussoleView extends WatchUi.WatchFace {
 
         var layout = new Layout(dc.getWidth(), dc.getHeight());
         var scene = StepsRing.scene(layout, orZero(activity.steps), stepGoal(activity.stepGoal));
-        scene.addAll(SunRings.scene(layout, sunTimes(location, clock.timeZoneOffset)));
+        scene.addAll(SunRing.scene(layout, nextSunEvent(location, clock.timeZoneOffset)));
         scene.addAll(TimeRing.scene(layout, clock.hour * 60 + clock.min));
 
         Render.draw(dc, scene);
@@ -53,12 +53,13 @@ class BoussoleView extends WatchUi.WatchFace {
         return (goal != null && goal > 0) ? goal : DEFAULT_STEP_GOAL;
     }
 
-    //! Next sunrise and sunset, or null without a known location.
-    private function sunTimes(location as Position.Location?, utcOffset as Number) as SunCalc.Times? {
+    //! Local minute of the next sunrise or sunset, or null without a known
+    //! location.
+    private function nextSunEvent(location as Position.Location?, utcOffset as Number) as Number? {
         if (location == null) {
             return null;
         }
         var degrees = location.toDegrees();
-        return SunCalc.upcoming(Time.now().value().toDouble(), degrees[0], degrees[1], utcOffset);
+        return SunCalc.nextEvent(Time.now().value().toDouble(), degrees[0], degrees[1], utcOffset);
     }
 }
