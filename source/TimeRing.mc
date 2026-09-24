@@ -1,25 +1,32 @@
 import Toybox.Lang;
 
 //! The current time, near the rim: a `ClockArc` in chalk, and the 12 hour
-//! points along its track in brume - XII, III, VI and IX as numerals, dots for
-//! the rest. The arc is never interrupted: points it covers (including its
-//! ends) are simply not drawn.
+//! points along its track in brume.
+//!
+//! - Uncovered points: XII, III, VI and IX as numerals, dots for the rest.
+//! - Points the arc covers (ends included) are not drawn, except the quarters,
+//!   which keep a brume dot on top of the arc so the dial stays readable.
+//! - The current hour's point is left to its bar.
 module TimeRing {
 
     function scene(layout as Layout, minuteOfDay as Number) as Array<Shapes.Shape> {
         var span = ClockArc.span(minuteOfDay);
-        var shapes = hourPoints(layout, span[0], span[1]);
+        var currentHour = (minuteOfDay % ClockArc.TURN) / 60;
+        var shapes = hourPoints(layout, span[0], span[1], currentHour);
         shapes.addAll(ClockArc.shapes(layout, layout.timeRadius, minuteOfDay, Palette.CHALK));
+        shapes.addAll(quarterDots(layout, span[0], span[1], currentHour));
         return shapes;
     }
 
     //! The hour points the arc leaves uncovered: a numeral at the quarters,
     //! a dot elsewhere.
-    function hourPoints(layout as Layout, start as Float, sweep as Float) as Array<Shapes.Shape> {
+    function hourPoints(
+        layout as Layout, start as Float, sweep as Float, currentHour as Number
+    ) as Array<Shapes.Shape> {
         var shapes = [] as Array<Shapes.Shape>;
         for (var hour = 0; hour < 12; hour++) {
             var position = hour / 12.0;
-            if (isCovered(position, start, sweep)) {
+            if (hour == currentHour || isCovered(position, start, sweep)) {
                 continue;
             }
             var pointX = layout.xAt(layout.timeRadius, position);
@@ -32,6 +39,24 @@ module TimeRing {
                 ));
             } else {
                 shapes.add(new Shapes.Dot(pointX, pointY, layout.penWidth / 2.0, Palette.BRUME));
+            }
+        }
+        return shapes;
+    }
+
+    //! Brume dots on top of the arc at the quarters it covers, except the
+    //! current hour's.
+    function quarterDots(
+        layout as Layout, start as Float, sweep as Float, currentHour as Number
+    ) as Array<Shapes.Shape> {
+        var shapes = [] as Array<Shapes.Shape>;
+        for (var hour = 0; hour < 12; hour += 3) {
+            var position = hour / 12.0;
+            if (hour != currentHour && isCovered(position, start, sweep)) {
+                shapes.add(new Shapes.Dot(
+                    layout.xAt(layout.timeRadius, position), layout.yAt(layout.timeRadius, position),
+                    layout.penWidth / 2.0, Palette.BRUME
+                ));
             }
         }
         return shapes;
