@@ -5,10 +5,9 @@ import Toybox.Math;
 //! Where things go, derived only from the screen size. Tracks, from the rim
 //! inwards:
 //!
-//!   timeRadius   time arc and its 12 hour points, close to the rim; the
-//!                minute tick reaches out to timeRadius + tickLength, the
-//!                hour tick in to timeRadius - tickLength
-//!   stepsRadius  steps arc, clear of the hour tick
+//!   timeRadius   time arc and its 12 hour points, close to the rim; the hour
+//!                cap crosses it, reaching capReach either side
+//!   stepsRadius  steps arc, clear of the hour cap
 //!
 //! A position on a track is a fraction of a turn clockwise from 12 o'clock
 //! (0.25 = 3 o'clock, 0.5 = 6 o'clock).
@@ -18,10 +17,10 @@ class Layout {
     public var centreY as Float;
 
     public var arcWidth as Float;         // time arc, px
-    public var penWidth as Float;         // ticks and the steps arc, px
+    public var penWidth as Float;         // steps arc and sun marker, px
     public var numeralPenWidth as Float;  // roman numeral strokes, px
     public var numeralHeight as Float;    // px
-    public var tickLength as Float;       // px
+    public var capReach as Float;         // hour cap, px either side of the arc
 
     public var timeRadius as Float;
     public var stepsRadius as Float;
@@ -36,10 +35,10 @@ class Layout {
         penWidth = 3.0;
         numeralPenWidth = 2.0;
         numeralHeight = screenRadius * 0.075;
-        tickLength = screenRadius * 0.06;
+        capReach = screenRadius * 0.05;
 
-        timeRadius = screenRadius - tickLength - penWidth - 4.0;
-        stepsRadius = timeRadius - tickLength - penWidth - 8.0;
+        timeRadius = screenRadius - capReach - 6.0;
+        stepsRadius = timeRadius - capReach - penWidth - 8.0;
     }
 
     //! Screen x of the point `radius` from the centre at `fraction` of a turn.

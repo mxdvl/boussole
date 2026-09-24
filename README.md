@@ -90,7 +90,7 @@ source/BoussoleView.mc           # reads the device, builds the scene, renders i
 source/Layout.mc                 # track radii and polar maths, from screen size
 source/Shapes.mc                 # plain drawing records (Arc, Line, Dot, Box)
 source/StepsRing.mc              # pure: inner steps arc
-source/TimeRing.mc               # pure: arc between the hands, hour points, ticks, sun marker
+source/TimeRing.mc               # pure: arc between the hands, hour points, hour cap, sun marker
 source/Numerals.mc               # pure: roman numerals as strokes
 source/SunCalc.mc                # pure: sunrise equation + next sun event
 source/Render.mc                 # the only code that draws

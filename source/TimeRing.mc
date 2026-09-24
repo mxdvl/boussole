@@ -11,8 +11,9 @@ import Toybox.Lang;
 //! the minute to the hour, so it empties again. The hour end steps by one
 //! point each hour, and the short 11:55 lap ends with a reset at 12:00.
 //!
-//! - Hours: an inward tick at the hour hand's point.
-//! - Minutes: an outward tick at the minute hand's position.
+//! - Hours: a cap across the arc at the hour hand's point, as thick as the
+//!   arc and reaching both sides of it (a T on its side).
+//! - Minutes: the arc's other end, unmarked.
 //! - 12 hour points along the track in teal-grey: XII, III, VI and IX as
 //!   numerals, dots for the rest. The arc is never interrupted: points it
 //!   covers (including its ends) are simply not drawn.
@@ -30,7 +31,6 @@ module TimeRing {
     //! Everything on the time track for local time `minuteOfDay` (0-1439).
     function scene(layout as Layout, minuteOfDay as Number, sun as SunCalc.Event?) as Array<Shapes.Shape> {
         var hourHand = pinnedHour(minuteOfDay) / TURN.toFloat();
-        var minuteHand = (minuteOfDay % 60) / 60.0;
         var span = arcSpan(minuteOfDay);
         var start = span[0];
         var sweep = span[1];
@@ -46,12 +46,8 @@ module TimeRing {
             shapes.add(sunMarker(layout, sun));
         }
         shapes.add(layout.radial(
-            hourHand, layout.timeRadius - layout.tickLength, layout.timeRadius,
-            ARC_COLOR, layout.penWidth
-        ));
-        shapes.add(layout.radial(
-            minuteHand, layout.timeRadius, layout.timeRadius + layout.tickLength,
-            ARC_COLOR, layout.penWidth
+            hourHand, layout.timeRadius - layout.capReach, layout.timeRadius + layout.capReach,
+            ARC_COLOR, layout.arcWidth
         ));
         return shapes;
     }
@@ -125,7 +121,7 @@ module TimeRing {
     }
 
     //! Whether `position` lies on the arc from `start` clockwise for `sweep`,
-    //! ends included (so the point under each hand's tick is covered too).
+    //! ends included (so the point under the hour cap is covered too).
     function isCovered(position as Float, start as Float, sweep as Float) as Boolean {
         var offset = position - start;
         if (offset < 0.0) {
