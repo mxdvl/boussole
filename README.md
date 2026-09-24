@@ -2,9 +2,10 @@
 
 A custom Garmin Connect IQ **watch face**, built with the Monkey C SDK.
 
-Current state: concentric rings filling clockwise from 12 o'clock — a steps
-arc at the rim, and a single 12-hour time arc with an outward tick to the
-minutes and an inward tick to the hour. Named _boussole_ ("compass" in French) —
+Current state: concentric rings — a steps arc at the rim, and a time arc
+between the hour and minute hands that fills on one lap of the minute hand
+and empties on the next (each lap ≈ 65.5 min), with stroke-drawn XII/III/VI/IX.
+Named _boussole_ ("compass" in French) —
 the design will grow toward a compass theme.
 
 ## Target devices
