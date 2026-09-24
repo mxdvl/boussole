@@ -28,80 +28,101 @@ module TimeRing {
 
     //! Everything on the time track for local time `minuteOfDay` (0-1439).
     function scene(layout as Layout, minuteOfDay as Number, sun as SunCalc.Event?) as Array<Shapes.Shape> {
-        var hourAt = (minuteOfDay % TURN) / TURN.toFloat();
-        var minuteAt = (minuteOfDay % 60) / 60.0;
+        var hourHand = (minuteOfDay % TURN) / TURN.toFloat();
+        var minuteHand = (minuteOfDay % 60) / 60.0;
         var span = arcSpan(minuteOfDay);
+        var start = span[0];
+        var sweep = span[1];
 
-        var out = [
-            new Shapes.Arc(layout.cx, layout.cy, layout.timeR, span[0], span[1], ARC_COLOR, layout.pen),
+        var shapes = [
+            new Shapes.Arc(
+                layout.centreX, layout.centreY, layout.timeRadius, start, sweep,
+                ARC_COLOR, layout.penWidth
+            ),
         ] as Array<Shapes.Shape>;
-        out.addAll(hourPoints(layout, span[0], span[1], hourAt, minuteAt));
+        shapes.addAll(hourPoints(layout, start, sweep, hourHand, minuteHand));
         if (sun != null) {
-            out.add(sunMarker(layout, sun));
+            shapes.add(sunMarker(layout, sun));
         }
-        out.add(layout.radial(hourAt, layout.timeR, layout.timeR - layout.tickLen, ARC_COLOR, layout.pen));
-        out.add(layout.radial(minuteAt, layout.timeR, layout.timeR + layout.tickLen, ARC_COLOR, layout.pen));
-        return out;
+        shapes.add(layout.radial(
+            hourHand, layout.timeRadius - layout.tickLength, layout.timeRadius,
+            ARC_COLOR, layout.penWidth
+        ));
+        shapes.add(layout.radial(
+            minuteHand, layout.timeRadius, layout.timeRadius + layout.tickLength,
+            ARC_COLOR, layout.penWidth
+        ));
+        return shapes;
     }
 
     //! The arc between the hands as [start, sweep], fractions of a turn. Works
     //! in whole 1/720ths of a turn (one minute of the hour hand) so the lap
     //! boundaries are exact.
     function arcSpan(minuteOfDay as Number) as [Float, Float] {
-        var hour = minuteOfDay % TURN;
-        var minute = (minuteOfDay % 60) * 12;
+        var hourHand = minuteOfDay % TURN;
+        var minuteHand = (minuteOfDay % 60) * 12;
         var lap = minuteOfDay * 11 / TURN;
 
         if (lap % 2 == 0) {
             // Filling: hour -> minute.
-            return [hour / TURN.toFloat(), mod(minute - hour, TURN) / TURN.toFloat()];
+            return [hourHand / TURN.toFloat(), wrap(minuteHand - hourHand, TURN) / TURN.toFloat()];
         }
         // Emptying: minute -> hour. At the lap's first instant the hands meet
         // and the arc is still full.
-        var sweep = mod(hour - minute, TURN);
-        return [minute / TURN.toFloat(), (sweep == 0 ? TURN : sweep) / TURN.toFloat()];
+        var sweep = wrap(hourHand - minuteHand, TURN);
+        return [minuteHand / TURN.toFloat(), (sweep == 0 ? TURN : sweep) / TURN.toFloat()];
     }
 
     //! The 12 hour points. A numeral sits on a black box that cuts through the
     //! arc; it gives way to a plain point when either tick lands on it.
     function hourPoints(
         layout as Layout, start as Float, sweep as Float,
-        hourAt as Float, minuteAt as Float
+        hourHand as Float, minuteHand as Float
     ) as Array<Shapes.Shape> {
-        var out = [] as Array<Shapes.Shape>;
-        var pad = layout.pen;
+        var shapes = [] as Array<Shapes.Shape>;
+        var padding = layout.penWidth;
 
-        for (var k = 0; k < 12; k++) {
-            var f = k / 12.0;
-            var x = layout.xAt(layout.timeR, f);
-            var y = layout.yAt(layout.timeR, f);
-            var text = numeral(k);
+        for (var hour = 0; hour < 12; hour++) {
+            var position = hour / 12.0;
+            var pointX = layout.xAt(layout.timeRadius, position);
+            var pointY = layout.yAt(layout.timeRadius, position);
+            var text = numeral(hour);
 
             if (text != null) {
-                var w = Numerals.width(text, layout.numeralH);
-                var tolerance = (w / 2.0 + pad) / (2.0 * Math.PI * layout.timeR);
-                if (!isNear(f, hourAt, tolerance) && !isNear(f, minuteAt, tolerance)) {
-                    out.add(new Shapes.Box(x, y, w + 2.0 * pad, layout.numeralH + 2.0 * pad, Graphics.COLOR_BLACK));
-                    out.addAll(Numerals.lines(text, x, y, layout.numeralH, ARC_COLOR, layout.numeralPen));
+                var textWidth = Numerals.width(text, layout.numeralHeight);
+                var clearance = (textWidth / 2.0 + padding) / (2.0 * Math.PI * layout.timeRadius);
+                if (!isNear(position, hourHand, clearance) && !isNear(position, minuteHand, clearance)) {
+                    shapes.add(new Shapes.Box(
+                        pointX, pointY,
+                        textWidth + 2.0 * padding, layout.numeralHeight + 2.0 * padding,
+                        Graphics.COLOR_BLACK
+                    ));
+                    shapes.addAll(Numerals.lines(
+                        text, pointX, pointY, layout.numeralHeight,
+                        ARC_COLOR, layout.numeralPenWidth
+                    ));
                     continue;
                 }
             }
 
-            if (isWithin(f, start, sweep)) {
-                out.add(new Shapes.Dot(x, y, layout.pen, Graphics.COLOR_BLACK));
+            if (isWithin(position, start, sweep)) {
+                shapes.add(new Shapes.Dot(pointX, pointY, layout.penWidth, Graphics.COLOR_BLACK));
             } else {
-                out.add(new Shapes.Dot(x, y, layout.pen / 2.0, POINT_COLOR));
+                shapes.add(new Shapes.Dot(pointX, pointY, layout.penWidth / 2.0, POINT_COLOR));
             }
         }
-        return out;
+        return shapes;
     }
 
     //! A short coloured stroke across the track at the sun event's time.
     function sunMarker(layout as Layout, sun as SunCalc.Event) as Shapes.Line {
-        var at = (sun.minuteOfDay % TURN) / TURN.toFloat();
-        var half = layout.pen + 4.0;
+        var position = (sun.minuteOfDay % TURN) / TURN.toFloat();
+        var halfLength = layout.penWidth + 4.0;
         var color = sun.isSunrise ? SUNRISE_COLOR : SUNSET_COLOR;
-        return layout.radial(at, layout.timeR - half, layout.timeR + half, color, layout.pen);
+        return layout.radial(
+            position, layout.timeRadius - halfLength, layout.timeRadius + halfLength,
+            color, layout.penWidth
+        );
     }
 
     //! Roman numeral for the quarter hours, null for the others.
@@ -115,30 +136,30 @@ module TimeRing {
         }
     }
 
-    //! Whether position `f` lies on the arc from `start` clockwise for `sweep`.
-    function isWithin(f as Float, start as Float, sweep as Float) as Boolean {
-        var d = f - start;
-        if (d < 0.0) {
-            d += 1.0;
+    //! Whether `position` lies on the arc from `start` clockwise for `sweep`.
+    function isWithin(position as Float, start as Float, sweep as Float) as Boolean {
+        var offset = position - start;
+        if (offset < 0.0) {
+            offset += 1.0;
         }
-        return d < sweep;
+        return offset < sweep;
     }
 
-    //! Whether two positions are within `tolerance` of each other, either way
+    //! Whether two positions are within `clearance` of each other, either way
     //! round the dial.
-    function isNear(a as Float, b as Float, tolerance as Float) as Boolean {
-        var d = a - b;
-        if (d < 0.0) {
-            d = -d;
+    function isNear(first as Float, second as Float, clearance as Float) as Boolean {
+        var distance = first - second;
+        if (distance < 0.0) {
+            distance = -distance;
         }
-        if (d > 0.5) {
-            d = 1.0 - d;
+        if (distance > 0.5) {
+            distance = 1.0 - distance;
         }
-        return d < tolerance;
+        return distance < clearance;
     }
 
-    //! `a` modulo `n`, always in [0, n).
-    function mod(a as Number, n as Number) as Number {
-        return ((a % n) + n) % n;
+    //! `value` wrapped into [0, `size`).
+    function wrap(value as Number, size as Number) as Number {
+        return ((value % size) + size) % size;
     }
 }

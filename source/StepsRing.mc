@@ -6,14 +6,14 @@ import Toybox.Lang;
 module StepsRing {
 
     function scene(layout as Layout, steps as Number, goal as Number) as Array<Shapes.Shape> {
-        var fraction = steps.toFloat() / goal.toFloat();
-        if (fraction > 1.0) {
-            fraction = 1.0;
+        var progress = steps.toFloat() / goal.toFloat();
+        if (progress > 1.0) {
+            progress = 1.0;
         }
         return [
             new Shapes.Arc(
-                layout.cx, layout.cy, layout.stepsR, 0.0, fraction,
-                Graphics.COLOR_WHITE, layout.pen
+                layout.centreX, layout.centreY, layout.stepsRadius, 0.0, progress,
+                Graphics.COLOR_WHITE, layout.penWidth
             ),
         ] as Array<Shapes.Shape>;
     }

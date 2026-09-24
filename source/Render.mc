@@ -12,50 +12,53 @@ module Render {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
 
-        for (var i = 0; i < scene.size(); i++) {
-            var s = scene[i];
-            if (s instanceof Shapes.Arc) {
-                drawArc(dc, s as Shapes.Arc);
-            } else if (s instanceof Shapes.Line) {
-                var l = s as Shapes.Line;
-                dc.setColor(l.color, Graphics.COLOR_TRANSPARENT);
-                dc.setPenWidth(l.pen);
-                dc.drawLine(l.x1, l.y1, l.x2, l.y2);
-            } else if (s instanceof Shapes.Dot) {
-                var d = s as Shapes.Dot;
-                dc.setColor(d.color, Graphics.COLOR_TRANSPARENT);
-                dc.fillCircle(d.x, d.y, d.r);
-            } else if (s instanceof Shapes.Box) {
-                var b = s as Shapes.Box;
-                dc.setColor(b.color, Graphics.COLOR_TRANSPARENT);
-                dc.fillRectangle(b.x - b.w / 2.0, b.y - b.h / 2.0, b.w, b.h);
+        for (var index = 0; index < scene.size(); index++) {
+            var shape = scene[index];
+            if (shape instanceof Shapes.Arc) {
+                drawArc(dc, shape as Shapes.Arc);
+            } else if (shape instanceof Shapes.Line) {
+                var line = shape as Shapes.Line;
+                dc.setColor(line.color, Graphics.COLOR_TRANSPARENT);
+                dc.setPenWidth(line.penWidth);
+                dc.drawLine(line.fromX, line.fromY, line.toX, line.toY);
+            } else if (shape instanceof Shapes.Dot) {
+                var dot = shape as Shapes.Dot;
+                dc.setColor(dot.color, Graphics.COLOR_TRANSPARENT);
+                dc.fillCircle(dot.centreX, dot.centreY, dot.radius);
+            } else if (shape instanceof Shapes.Box) {
+                var box = shape as Shapes.Box;
+                dc.setColor(box.color, Graphics.COLOR_TRANSPARENT);
+                dc.fillRectangle(
+                    box.centreX - box.width / 2.0, box.centreY - box.height / 2.0,
+                    box.width, box.height
+                );
             }
         }
     }
 
-    function drawArc(dc as Graphics.Dc, a as Shapes.Arc) as Void {
-        dc.setColor(a.color, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(a.pen);
-        if (a.sweep >= 1.0) {
-            dc.drawCircle(a.cx, a.cy, a.r);
+    function drawArc(dc as Graphics.Dc, arc as Shapes.Arc) as Void {
+        dc.setColor(arc.color, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(arc.penWidth);
+        if (arc.sweep >= 1.0) {
+            dc.drawCircle(arc.centreX, arc.centreY, arc.radius);
             return;
         }
-        if (a.sweep * 360.0 < 0.5) {
+        if (arc.sweep * 360.0 < 0.5) {
             return;
         }
         dc.drawArc(
-            a.cx, a.cy, a.r, Graphics.ARC_CLOCKWISE,
-            degrees(a.start), degrees(a.start + a.sweep)
+            arc.centreX, arc.centreY, arc.radius, Graphics.ARC_CLOCKWISE,
+            degrees(arc.start), degrees(arc.start + arc.sweep)
         );
     }
 
     //! A fraction of a turn clockwise from 12 o'clock, as the Dc's angle:
     //! degrees counter-clockwise from 3 o'clock, in [0, 360).
     function degrees(fraction as Float) as Float {
-        var d = 90.0 - fraction * 360.0;
-        while (d < 0.0) {
-            d += 360.0;
+        var angle = 90.0 - fraction * 360.0;
+        while (angle < 0.0) {
+            angle += 360.0;
         }
-        return d;
+        return angle;
     }
 }

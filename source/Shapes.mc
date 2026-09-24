@@ -9,83 +9,86 @@ module Shapes {
 
     typedef Shape as Arc or Line or Dot or Box;
 
-    //! Arc on the circle of radius `r` about (`cx`, `cy`), from `start`
+    //! Arc on the circle of `radius` about (`centreX`, `centreY`), from `start`
     //! clockwise for `sweep`. Both are fractions of a turn from 12 o'clock;
     //! a sweep of 1 or more is a full circle.
     class Arc {
-        public var cx as Float;
-        public var cy as Float;
-        public var r as Float;
+        public var centreX as Float;
+        public var centreY as Float;
+        public var radius as Float;
         public var start as Float;
         public var sweep as Float;
         public var color as Graphics.ColorType;
-        public var pen as Float;
+        public var penWidth as Float;
 
         function initialize(
-            cx as Float, cy as Float, r as Float,
+            centreX as Float, centreY as Float, radius as Float,
             start as Float, sweep as Float,
-            color as Graphics.ColorType, pen as Float
+            color as Graphics.ColorType, penWidth as Float
         ) {
-            self.cx = cx;
-            self.cy = cy;
-            self.r = r;
+            self.centreX = centreX;
+            self.centreY = centreY;
+            self.radius = radius;
             self.start = start;
             self.sweep = sweep;
             self.color = color;
-            self.pen = pen;
+            self.penWidth = penWidth;
         }
     }
 
     //! Straight stroke between two screen points.
     class Line {
-        public var x1 as Float;
-        public var y1 as Float;
-        public var x2 as Float;
-        public var y2 as Float;
+        public var fromX as Float;
+        public var fromY as Float;
+        public var toX as Float;
+        public var toY as Float;
         public var color as Graphics.ColorType;
-        public var pen as Float;
+        public var penWidth as Float;
 
         function initialize(
-            x1 as Float, y1 as Float, x2 as Float, y2 as Float,
-            color as Graphics.ColorType, pen as Float
+            fromX as Float, fromY as Float, toX as Float, toY as Float,
+            color as Graphics.ColorType, penWidth as Float
         ) {
-            self.x1 = x1;
-            self.y1 = y1;
-            self.x2 = x2;
-            self.y2 = y2;
+            self.fromX = fromX;
+            self.fromY = fromY;
+            self.toX = toX;
+            self.toY = toY;
             self.color = color;
-            self.pen = pen;
+            self.penWidth = penWidth;
         }
     }
 
-    //! Filled circle centred on (`x`, `y`).
+    //! Filled circle.
     class Dot {
-        public var x as Float;
-        public var y as Float;
-        public var r as Float;
+        public var centreX as Float;
+        public var centreY as Float;
+        public var radius as Float;
         public var color as Graphics.ColorType;
 
-        function initialize(x as Float, y as Float, r as Float, color as Graphics.ColorType) {
-            self.x = x;
-            self.y = y;
-            self.r = r;
+        function initialize(centreX as Float, centreY as Float, radius as Float, color as Graphics.ColorType) {
+            self.centreX = centreX;
+            self.centreY = centreY;
+            self.radius = radius;
             self.color = color;
         }
     }
 
-    //! Filled rectangle centred on (`x`, `y`).
+    //! Filled rectangle, positioned by its centre.
     class Box {
-        public var x as Float;
-        public var y as Float;
-        public var w as Float;
-        public var h as Float;
+        public var centreX as Float;
+        public var centreY as Float;
+        public var width as Float;
+        public var height as Float;
         public var color as Graphics.ColorType;
 
-        function initialize(x as Float, y as Float, w as Float, h as Float, color as Graphics.ColorType) {
-            self.x = x;
-            self.y = y;
-            self.w = w;
-            self.h = h;
+        function initialize(
+            centreX as Float, centreY as Float, width as Float, height as Float,
+            color as Graphics.ColorType
+        ) {
+            self.centreX = centreX;
+            self.centreY = centreY;
+            self.width = width;
+            self.height = height;
             self.color = color;
         }
     }

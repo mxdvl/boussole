@@ -3,11 +3,11 @@ import Toybox.Math;
 
 //! Sunrise/sunset for a date and location, via the standard "sunrise equation"
 //! (NOAA/Wikipedia). Pure math, no I/O. Longitude is east-positive (as returned
-//! by `Position`), latitude north-positive. Times are Unix seconds (UTC); the
-//! caller converts to local clock time via `Gregorian.info`.
+//! by `Position`), latitude north-positive. Times are Unix seconds (UTC) until
+//! `nextEvent` converts them to a local time of day.
 module SunCalc {
 
-    const DEG = Math.PI / 180.0;
+    const DEG = Math.PI / 180.0;  // radians per degree
 
     //! A sunrise or sunset, at a local time of day.
     class Event {
@@ -25,8 +25,8 @@ module SunCalc {
     //! the local offset in seconds (DST included), used for the time of day.
     //! Null during polar day/night.
     function nextEvent(nowUnix as Double, latDeg as Double, lonDeg as Double, utcOffset as Number) as Event? {
-        var jd = julian(nowUnix);
-        var today = riseSet(jd, latDeg, lonDeg);
+        var julianDate = julian(nowUnix);
+        var today = riseSet(julianDate, latDeg, lonDeg);
         if (today == null) {
             return null;
         }
@@ -42,7 +42,7 @@ module SunCalc {
             return new Event(localMinuteOfDay(set, utcOffset), false);
         }
 
-        var tomorrow = riseSet(jd + 1.0, latDeg, lonDeg);
+        var tomorrow = riseSet(julianDate + 1.0, latDeg, lonDeg);
         if (tomorrow == null) {
             return null;
         }
@@ -63,47 +63,52 @@ module SunCalc {
         return unixSeconds / 86400.0 + 2440587.5;
     }
 
-    //! Sunrise and sunset for the solar day containing Julian date `jd`.
+    //! Sunrise and sunset for the solar day containing `julianDate`.
     //! Returns { :rise => Double, :set => Double } in Unix seconds, or null when
     //! the sun neither rises nor sets that day (polar day/night).
-    function riseSet(jd as Double, latDeg as Double, lonDeg as Double) as Dictionary<Symbol, Double>? {
-        var n = ((jd - 2451545.0 + 0.0008) + 0.5).toNumber().toDouble();
+    function riseSet(julianDate as Double, latDeg as Double, lonDeg as Double) as Dictionary<Symbol, Double>? {
+        var dayNumber = ((julianDate - 2451545.0 + 0.0008) + 0.5).toNumber().toDouble();
 
-        var jStar = n + lonDeg / 360.0;                 // mean solar noon
-        var m = mod360(357.5291 + 0.98560028 * jStar);  // solar mean anomaly, deg
-        var mr = m * DEG;
+        var meanNoon = dayNumber + lonDeg / 360.0;
+        var meanAnomaly = mod360(357.5291 + 0.98560028 * meanNoon);  // deg
+        var meanAnomalyRad = meanAnomaly * DEG;
 
-        var c = 1.9148 * Math.sin(mr) + 0.02 * Math.sin(2.0 * mr) + 0.0003 * Math.sin(3.0 * mr);
-        var lambda = mod360(m + c + 282.9372);          // ecliptic longitude, deg
-        var lr = lambda * DEG;
+        var equationOfCentre = 1.9148 * Math.sin(meanAnomalyRad)
+            + 0.02 * Math.sin(2.0 * meanAnomalyRad)
+            + 0.0003 * Math.sin(3.0 * meanAnomalyRad);
+        var eclipticLongitude = mod360(meanAnomaly + equationOfCentre + 282.9372);  // deg
+        var eclipticLongitudeRad = eclipticLongitude * DEG;
 
-        var jTransit = 2451545.0 + jStar + 0.0053 * Math.sin(mr) - 0.0069 * Math.sin(2.0 * lr);
+        var transit = 2451545.0 + meanNoon
+            + 0.0053 * Math.sin(meanAnomalyRad)
+            - 0.0069 * Math.sin(2.0 * eclipticLongitudeRad);
 
-        var sinDelta = Math.sin(lr) * Math.sin(23.4397 * DEG);
-        var cosDelta = Math.sqrt(1.0 - sinDelta * sinDelta);
+        var sinDeclination = Math.sin(eclipticLongitudeRad) * Math.sin(23.4397 * DEG);
+        var cosDeclination = Math.sqrt(1.0 - sinDeclination * sinDeclination);
 
-        var latR = latDeg * DEG;
-        var cosOmega = (Math.sin(-0.833 * DEG) - Math.sin(latR) * sinDelta) / (Math.cos(latR) * cosDelta);
-        if (cosOmega > 1.0 || cosOmega < -1.0) {
-            return null;                                 // sun stays down / up all day
+        var latRad = latDeg * DEG;
+        var cosHourAngle = (Math.sin(-0.833 * DEG) - Math.sin(latRad) * sinDeclination)
+            / (Math.cos(latRad) * cosDeclination);
+        if (cosHourAngle > 1.0 || cosHourAngle < -1.0) {
+            return null;  // sun stays down / up all day
         }
 
-        var omega = Math.acos(cosOmega) / DEG;           // hour angle, deg
-        var jRise = jTransit - omega / 360.0;
-        var jSet = jTransit + omega / 360.0;
+        var hourAngle = Math.acos(cosHourAngle) / DEG;  // deg
+        var riseJulian = transit - hourAngle / 360.0;
+        var setJulian = transit + hourAngle / 360.0;
 
         return {
-            :rise => (jRise - 2440587.5) * 86400.0,
-            :set => (jSet - 2440587.5) * 86400.0,
+            :rise => (riseJulian - 2440587.5) * 86400.0,
+            :set => (setJulian - 2440587.5) * 86400.0,
         };
     }
 
     //! Reduce an angle in degrees to [0, 360).
-    function mod360(x as Double) as Double {
-        var r = x - (x / 360.0).toNumber() * 360.0;
-        if (r < 0.0) {
-            r += 360.0;
+    function mod360(degrees as Double) as Double {
+        var reduced = degrees - (degrees / 360.0).toNumber() * 360.0;
+        if (reduced < 0.0) {
+            reduced += 360.0;
         }
-        return r;
+        return reduced;
     }
 }

@@ -42,8 +42,8 @@ class BoussoleView extends WatchUi.WatchFace {
     function onExitSleep() as Void {
     }
 
-    private function orZero(n as Number?) as Number {
-        return n != null ? n : 0;
+    private function orZero(value as Number?) as Number {
+        return value != null ? value : 0;
     }
 
     private function stepGoal(goal as Number?) as Number {
@@ -55,7 +55,7 @@ class BoussoleView extends WatchUi.WatchFace {
         if (location == null) {
             return null;
         }
-        var deg = location.toDegrees();
-        return SunCalc.nextEvent(Time.now().value().toDouble(), deg[0], deg[1], utcOffset);
+        var degrees = location.toDegrees();
+        return SunCalc.nextEvent(Time.now().value().toDouble(), degrees[0], degrees[1], utcOffset);
     }
 }
