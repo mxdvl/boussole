@@ -13,10 +13,9 @@ import Toybox.Lang;
 //!
 //! - Hours: an inward tick at the hour hand's point.
 //! - Minutes: an outward tick at the minute hand's position.
-//! - 12 hour points along the track. Points under the arc are cut out of it
-//!   as small notches; the others are teal-grey dots.
-//! - XII, III, VI and IX in the same teal-grey, just inside the track so the
-//!   arc runs past them uninterrupted.
+//! - 12 hour points along the track in teal-grey: XII, III, VI and IX as
+//!   numerals, dots for the rest. The arc is never interrupted: points it
+//!   covers (including its ends) are simply not drawn.
 //! - The next sunrise (orange) or sunset (blue) crosses the track in colour.
 module TimeRing {
 
@@ -39,11 +38,10 @@ module TimeRing {
         var shapes = [
             new Shapes.Arc(
                 layout.centreX, layout.centreY, layout.timeRadius, start, sweep,
-                ARC_COLOR, layout.penWidth
+                ARC_COLOR, layout.arcWidth
             ),
         ] as Array<Shapes.Shape>;
         shapes.addAll(hourPoints(layout, start, sweep));
-        shapes.addAll(numerals(layout));
         if (sun != null) {
             shapes.add(sunMarker(layout, sun));
         }
@@ -80,16 +78,23 @@ module TimeRing {
         return [minuteHand / TURN.toFloat(), (sweep == 0 ? TURN : sweep) / TURN.toFloat()];
     }
 
-    //! The 12 hour points on the track: notches where the arc covers them,
-    //! dots elsewhere.
+    //! The hour points the arc leaves uncovered: a numeral at the quarters,
+    //! a dot elsewhere.
     function hourPoints(layout as Layout, start as Float, sweep as Float) as Array<Shapes.Shape> {
         var shapes = [] as Array<Shapes.Shape>;
         for (var hour = 0; hour < 12; hour++) {
             var position = hour / 12.0;
+            if (isCovered(position, start, sweep)) {
+                continue;
+            }
             var pointX = layout.xAt(layout.timeRadius, position);
             var pointY = layout.yAt(layout.timeRadius, position);
-            if (isWithin(position, start, sweep)) {
-                shapes.add(new Shapes.Dot(pointX, pointY, layout.penWidth, Graphics.COLOR_BLACK));
+            var text = numeral(hour);
+            if (text != null) {
+                shapes.addAll(Numerals.lines(
+                    text, pointX, pointY, layout.numeralHeight,
+                    MARKING_COLOR, layout.numeralPenWidth
+                ));
             } else {
                 shapes.add(new Shapes.Dot(pointX, pointY, layout.penWidth / 2.0, MARKING_COLOR));
             }
@@ -97,20 +102,15 @@ module TimeRing {
         return shapes;
     }
 
-    //! XII, III, VI and IX on the numeral track.
-    function numerals(layout as Layout) as Array<Shapes.Shape> {
-        var shapes = [] as Array<Shapes.Shape>;
-        var texts = ["XII", "III", "VI", "IX"];
-        for (var quarter = 0; quarter < texts.size(); quarter++) {
-            var position = quarter / 4.0;
-            shapes.addAll(Numerals.lines(
-                texts[quarter],
-                layout.xAt(layout.numeralRadius, position),
-                layout.yAt(layout.numeralRadius, position),
-                layout.numeralHeight, MARKING_COLOR, layout.numeralPenWidth
-            ));
+    //! Roman numeral for the quarter hours, null for the others.
+    function numeral(hour as Number) as String? {
+        switch (hour) {
+            case 0: return "XII";
+            case 3: return "III";
+            case 6: return "VI";
+            case 9: return "IX";
+            default: return null;
         }
-        return shapes;
     }
 
     //! A short coloured stroke across the track at the sun event's time.
@@ -124,13 +124,14 @@ module TimeRing {
         );
     }
 
-    //! Whether `position` lies on the arc from `start` clockwise for `sweep`.
-    function isWithin(position as Float, start as Float, sweep as Float) as Boolean {
+    //! Whether `position` lies on the arc from `start` clockwise for `sweep`,
+    //! ends included (so the point under each hand's tick is covered too).
+    function isCovered(position as Float, start as Float, sweep as Float) as Boolean {
         var offset = position - start;
         if (offset < 0.0) {
             offset += 1.0;
         }
-        return offset < sweep;
+        return offset <= sweep + 0.0001;
     }
 
     //! `value` wrapped into [0, `size`).
