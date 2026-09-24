@@ -9,11 +9,13 @@ class BoussoleApp extends Application.AppBase {
         AppBase.initialize();
     }
 
-    //! Called on application start up.
+    //! Nothing to restore: every update rebuilds the scene from the device,
+    //! so there's no state to carry between launches.
     function onStart(state as Dictionary?) as Void {
     }
 
-    //! Called when the application is exiting.
+    //! Nothing to persist: every update rebuilds the scene from the device,
+    //! so there's no state to carry between launches.
     function onStop(state as Dictionary?) as Void {
     }
 

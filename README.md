@@ -2,8 +2,13 @@
 
 A custom Garmin Connect IQ **watch face**, built with the Monkey C SDK.
 
-Current state: base analog face showing the time with standard hour and
-minute hands over a 12-tick dial. Named _boussole_ ("compass" in French) —
+Current state: concentric rings. Near the rim, the current time as an arc
+between the (pinned) hour hand and the minute hand, which fills on one
+65-minute lap and empties on the next, with a bar across the hour end and
+stroke-drawn XII/III/VI/IX on its track. Inside it, the next sunrise or
+sunset in the same style, then steps in the same
+style, anchored at XII.
+Named _boussole_ ("compass" in French) —
 the design will grow toward a compass theme.
 
 ## Target devices
@@ -47,6 +52,33 @@ In the simulator, pick a watch face via **Settings** if it doesn't show
 automatically. Use **File → Time** to fast-forward the clock and watch the
 hands move.
 
+## Install on the watch
+
+The Venu 4 connects over USB as an MTP device, not as a drive, so macOS
+Finder can't see it. Use [OpenMTP](https://openmtp.ganeshrvel.com/) to copy
+files across.
+
+1. Build a release `.prg` for the watch:
+
+   ```sh
+   mkdir -p bin
+   monkeyc -o bin/boussole.prg -f monkey.jungle -y developer_key.der -d venu445mm -r -w -l 3
+   ```
+
+2. Plug the watch in with its USB cable and open **OpenMTP.app**. Quit Garmin
+   Express first if it's running, since it can hold the connection.
+3. In OpenMTP, the left pane is your Mac and the right pane is the watch. In
+   the left pane go to this project's `bin/` folder; in the right pane go to
+   `GARMIN/Apps`.
+4. Drag `boussole.prg` from the left pane into `GARMIN/Apps`, straight into
+   that folder, not a subfolder. Replace the old copy if it asks. Leave the
+   other `.prg` files there alone: they're your other installed apps.
+5. Unplug the watch. It installs the file as it disconnects.
+6. On the watch, long-press the watch face (or go to **Settings → Watch Face**)
+   and pick **Boussole**.
+
+To update, rebuild and repeat steps 2–5: the new file replaces the old one.
+
 ## Editor support
 
 Monkey C's full IntelliSense (completion, go-to-definition, inline API docs,
@@ -83,12 +115,28 @@ monkey.jungle                    # build config
 resources/strings/strings.xml    # app name
 resources/drawables/             # launcher icon + drawable defs
 source/BoussoleApp.mc            # Application entry point
-source/BoussoleView.mc           # WatchFace view (dial + hands)
+source/BoussoleView.mc           # reads the device, builds the scene, renders it
+source/Layout.mc                 # track radii and polar maths, from screen size
+source/Shapes.mc                 # plain drawing records (Arc, Line, Dot)
+source/Palette.mc                # named colours (craie, encre, brume)
+source/ClockArc.mc               # pure: one time as an arc between the hands + hour bar
+source/TimeRing.mc               # pure: current time, hour points, numerals; the Always-On scene
+source/SunRing.mc                # pure: next sunrise or sunset as a clock arc
+source/StepsRing.mc              # pure: steps ring, anchored at XII
+source/Numerals.mc               # pure: roman numerals as strokes
+source/SunCalc.mc                # pure: sunrise equation + next sun event
+source/Render.mc                 # the only code that draws
 ```
+
+## Always-On Display
+
+While asleep on AMOLED devices with Always-On enabled, `BoussoleView` swaps
+in the pared-back scene from `TimeRing.aodScene` (see its doc comment for
+what changes and why).
+
+Verified with the simulator's heat map (**File → View Screen Heat Map**):
+no burn-in, peak luminance under 3%.
 
 ## Notes / next steps
 
-- The Venu 4 is AMOLED. For always-on display support you'll later want
-  burn-in protection (a low-color, low-pixel "always-on" variant drawn in
-  `onUpdate` when the device is in low-power mode). Not needed for this
-  first step, which updates once per minute.
+- Nothing outstanding right now.
