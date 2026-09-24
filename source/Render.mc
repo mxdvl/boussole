@@ -25,10 +25,6 @@ module Render {
                 var dot = shape as Shapes.Dot;
                 dc.setColor(dot.color, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dot.centreX, dot.centreY, dot.radius);
-            } else if (shape instanceof Shapes.Polygon) {
-                var polygon = shape as Shapes.Polygon;
-                dc.setColor(polygon.color, Graphics.COLOR_TRANSPARENT);
-                dc.fillPolygon(polygon.corners);
             }
         }
     }
@@ -37,23 +33,16 @@ module Render {
         dc.setColor(arc.color, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(arc.penWidth);
         if (arc.sweep >= 1.0) {
-            dc.drawCircle(arc.centreX, arc.centreY, strokeRadius(arc));
+            dc.drawCircle(arc.centreX, arc.centreY, arc.radius);
             return;
         }
         if (arc.sweep * 360.0 < 0.5) {
             return;
         }
         dc.drawArc(
-            arc.centreX, arc.centreY, strokeRadius(arc), Graphics.ARC_CLOCKWISE,
+            arc.centreX, arc.centreY, arc.radius, Graphics.ARC_CLOCKWISE,
             degrees(arc.start), degrees(arc.start + arc.sweep)
         );
-    }
-
-    //! The Dc grows a thick arc inwards from the radius it is given, rather
-    //! than centring the stroke on it. Push it out by half the pen width so
-    //! the stroke is centred on `arc.radius`, matching every other shape.
-    function strokeRadius(arc as Shapes.Arc) as Float {
-        return arc.radius + arc.penWidth / 2.0;
     }
 
     //! A fraction of a turn clockwise from 12 o'clock, as the Dc's angle:

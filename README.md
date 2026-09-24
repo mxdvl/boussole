@@ -88,7 +88,7 @@ resources/drawables/             # launcher icon + drawable defs
 source/BoussoleApp.mc            # Application entry point
 source/BoussoleView.mc           # reads the device, builds the scene, renders it
 source/Layout.mc                 # track radii and polar maths, from screen size
-source/Shapes.mc                 # plain drawing records (Arc, Line, Dot, Polygon)
+source/Shapes.mc                 # plain drawing records (Arc, Line, Dot)
 source/StepsRing.mc              # pure: inner steps arc
 source/TimeRing.mc               # pure: arc between the hands, hour points, hour cap, sun marker
 source/Numerals.mc               # pure: roman numerals as strokes

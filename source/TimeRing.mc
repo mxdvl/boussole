@@ -13,7 +13,7 @@ import Toybox.Lang;
 //!
 //! - Hours: a cap across the arc at the hour hand's point, as thick as the
 //!   arc and reaching both sides of it (a T on its side).
-//! - Minutes: the arc's other end, rounded off.
+//! - Minutes: the arc's other end, unmarked.
 //! - 12 hour points along the track in teal-grey: XII, III, VI and IX as
 //!   numerals, dots for the rest. The arc is never interrupted: points it
 //!   covers (including its ends) are simply not drawn.
@@ -31,7 +31,6 @@ module TimeRing {
     //! Everything on the time track for local time `minuteOfDay` (0-1439).
     function scene(layout as Layout, minuteOfDay as Number, sun as SunCalc.Event?) as Array<Shapes.Shape> {
         var hourHand = pinnedHour(minuteOfDay) / TURN.toFloat();
-        var minuteHand = (minuteOfDay % 60) / 60.0;
         var span = arcSpan(minuteOfDay);
         var start = span[0];
         var sweep = span[1];
@@ -46,11 +45,6 @@ module TimeRing {
         if (sun != null) {
             shapes.add(sunMarker(layout, sun));
         }
-        // Round off the minute end (drawArc's own ends are square).
-        shapes.add(new Shapes.Dot(
-            layout.xAt(layout.timeRadius, minuteHand), layout.yAt(layout.timeRadius, minuteHand),
-            layout.arcWidth / 2.0, ARC_COLOR
-        ));
         shapes.add(layout.bar(hourHand, layout.timeRadius, layout.capReach, layout.arcWidth, ARC_COLOR));
         return shapes;
     }
