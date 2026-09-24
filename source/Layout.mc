@@ -51,6 +51,30 @@ class Layout {
         return (centreY - radius * Math.cos(fraction * 2.0 * Math.PI)).toFloat();
     }
 
+    //! A square-ended bar across the track of `radius` at `fraction` of a turn:
+    //! `reach` px either side of the track, `thickness` px along it, centred
+    //! exactly on the track.
+    function bar(
+        fraction as Float, radius as Float, reach as Float, thickness as Float,
+        color as Graphics.ColorType
+    ) as Shapes.Polygon {
+        var angle = fraction * 2.0 * Math.PI;
+        var outwardX = Math.sin(angle);
+        var outwardY = -Math.cos(angle);
+        var alongX = -outwardY * thickness / 2.0;
+        var alongY = outwardX * thickness / 2.0;
+        var innerX = xAt(radius - reach, fraction);
+        var innerY = yAt(radius - reach, fraction);
+        var outerX = xAt(radius + reach, fraction);
+        var outerY = yAt(radius + reach, fraction);
+        return new Shapes.Polygon([
+            [innerX - alongX, innerY - alongY],
+            [outerX - alongX, outerY - alongY],
+            [outerX + alongX, outerY + alongY],
+            [innerX + alongX, innerY + alongY],
+        ] as Array<[Numeric, Numeric]>, color);
+    }
+
     //! A radial stroke at `fraction` of a turn, from `innerRadius` to `outerRadius`.
     function radial(
         fraction as Float, innerRadius as Float, outerRadius as Float,

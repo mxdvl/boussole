@@ -25,13 +25,10 @@ module Render {
                 var dot = shape as Shapes.Dot;
                 dc.setColor(dot.color, Graphics.COLOR_TRANSPARENT);
                 dc.fillCircle(dot.centreX, dot.centreY, dot.radius);
-            } else if (shape instanceof Shapes.Box) {
-                var box = shape as Shapes.Box;
-                dc.setColor(box.color, Graphics.COLOR_TRANSPARENT);
-                dc.fillRectangle(
-                    box.centreX - box.width / 2.0, box.centreY - box.height / 2.0,
-                    box.width, box.height
-                );
+            } else if (shape instanceof Shapes.Polygon) {
+                var polygon = shape as Shapes.Polygon;
+                dc.setColor(polygon.color, Graphics.COLOR_TRANSPARENT);
+                dc.fillPolygon(polygon.corners);
             }
         }
     }

@@ -7,7 +7,7 @@ import Toybox.Lang;
 //! black shape later in the list cuts a gap in whatever came before it.
 module Shapes {
 
-    typedef Shape as Arc or Line or Dot or Box;
+    typedef Shape as Arc or Line or Dot or Polygon;
 
     //! Arc on the circle of `radius` about (`centreX`, `centreY`), from `start`
     //! clockwise for `sweep`. Both are fractions of a turn from 12 o'clock;
@@ -73,22 +73,13 @@ module Shapes {
         }
     }
 
-    //! Filled rectangle, positioned by its centre.
-    class Box {
-        public var centreX as Float;
-        public var centreY as Float;
-        public var width as Float;
-        public var height as Float;
+    //! Filled polygon through `corners`, each a screen [x, y].
+    class Polygon {
+        public var corners as Array<[Numeric, Numeric]>;
         public var color as Graphics.ColorType;
 
-        function initialize(
-            centreX as Float, centreY as Float, width as Float, height as Float,
-            color as Graphics.ColorType
-        ) {
-            self.centreX = centreX;
-            self.centreY = centreY;
-            self.width = width;
-            self.height = height;
+        function initialize(corners as Array<[Numeric, Numeric]>, color as Graphics.ColorType) {
+            self.corners = corners;
             self.color = color;
         }
     }
