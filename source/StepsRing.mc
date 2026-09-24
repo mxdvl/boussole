@@ -1,7 +1,7 @@
 import Toybox.Graphics;
 import Toybox.Lang;
 
-//! Steps: a bare arc near the rim, filled clockwise from 12 o'clock towards
+//! Steps: a bare arc inside the numerals, filled clockwise from 12 o'clock towards
 //! today's step goal. No tick, no number.
 module StepsRing {
 

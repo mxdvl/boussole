@@ -10,8 +10,9 @@ import Toybox.WatchUi;
 //!
 //!   1. read the device (time, steps, location) - the only impure inputs
 //!   2. build a scene: pure functions turn those values into `Shapes`
-//!        StepsRing  bare arc at the rim: progress towards the step goal
-//!        TimeRing   arc between the hands, hour points, ticks, sun marker
+//!        TimeRing   near the rim: arc between the hands, hour points,
+//!                   ticks, numerals, sun marker
+//!        StepsRing  bare inner arc: progress towards the step goal
 //!   3. `Render` draws the scene
 class BoussoleView extends WatchUi.WatchFace {
 
