@@ -51,6 +51,33 @@ In the simulator, pick a watch face via **Settings** if it doesn't show
 automatically. Use **File → Time** to fast-forward the clock and watch the
 hands move.
 
+## Install on the watch
+
+The Venu 4 connects over USB as an MTP device, not as a drive, so macOS
+Finder can't see it. Use [OpenMTP](https://openmtp.ganeshrvel.com/) to copy
+files across.
+
+1. Build a release `.prg` for the watch:
+
+   ```sh
+   mkdir -p bin
+   monkeyc -o bin/boussole.prg -f monkey.jungle -y developer_key.der -d venu445mm -r -w -l 3
+   ```
+
+2. Plug the watch in with its USB cable and open **OpenMTP.app**. Quit Garmin
+   Express first if it's running, since it can hold the connection.
+3. In OpenMTP, the left pane is your Mac and the right pane is the watch. In
+   the left pane go to this project's `bin/` folder; in the right pane go to
+   `GARMIN/Apps`.
+4. Drag `boussole.prg` from the left pane into `GARMIN/Apps`, straight into
+   that folder, not a subfolder. Replace the old copy if it asks. Leave the
+   other `.prg` files there alone: they're your other installed apps.
+5. Unplug the watch. It installs the file as it disconnects.
+6. On the watch, long-press the watch face (or go to **Settings → Watch Face**)
+   and pick **Boussole**.
+
+To update, rebuild and repeat steps 2–5: the new file replaces the old one.
+
 ## Editor support
 
 Monkey C's full IntelliSense (completion, go-to-definition, inline API docs,
