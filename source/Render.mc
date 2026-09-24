@@ -30,6 +30,9 @@ module Render {
         }
     }
 
+    //! Draws one arc, handling two cases the Dc's own arc call can't: a
+    //! `sweep` of a full turn or more draws as a circle, and a sweep under
+    //! half a degree is skipped rather than drawn as a stray pixel.
     function drawArc(dc as Graphics.Dc, arc as Shapes.Arc) as Void {
         dc.setColor(arc.color, Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(arc.penWidth);

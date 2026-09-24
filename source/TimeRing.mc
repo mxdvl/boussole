@@ -1,16 +1,14 @@
 import Toybox.Lang;
 
-//! The current time, near the rim: a `ClockArc` in craie, and the 12 hour
-//! points along its track in brume.
+//! The current time, near the rim: a `ClockArc` in _craie_, with the 12 hour
+//! points along its track in _brume_.
 //!
 //! - Uncovered points: XII, III, VI and IX as numerals, dots for the rest.
-//! - Points the arc covers (ends included) are not drawn, except the quarters
-//!   the arc has run at least a minute past: those get a gap cut across the
-//!   arc in encre, with a thin brume tick inside it, so the dial stays
-//!   readable. The cut itself is kept in the Always-On scene too - it
-//!   subtracts lit pixels rather than adding them, so it costs nothing
-//!   against the low-power luminance budget; only the brume tick is dropped.
+//! - Once the arc has run at least a minute past an uncovered quarter, a gap
+//!   is cut across it there instead, so the dial stays readable.
 //! - The current hour's point is left to its bar.
+//!
+//! See `aodScene` for the pared-back Always-On version.
 module TimeRing {
 
     const ONE_MINUTE = 1.0 / 60.0 - 0.0001;  // a minute of the minute hand, as a fraction of a turn
@@ -27,11 +25,11 @@ module TimeRing {
         return shapes;
     }
 
-    //! The Always-On scene: the time arc and hour bar, dimmed from craie to
-    //! brume, plus the encre quarter gaps (kept - see above). Everything else
-    //! that's brume - numerals, dots, quarter ticks - is dropped, to stay well
-    //! inside the low-power luminance budget on a device that requires
-    //! burn-in protection.
+    //! The Always-On scene: the time arc and hour bar in _brume_ instead of
+    //! _craie_, plus the quarter gaps - an _encre_ cut is free to keep, since
+    //! it removes lit pixels rather than adding them. Everything else -
+    //! numerals, dots, the _brume_ tick inside each gap - is dropped, to stay
+    //! well inside the low-power luminance budget.
     function aodScene(layout as Layout, minuteOfDay as Number) as Array<Shapes.Shape> {
         var span = ClockArc.span(minuteOfDay);
         var currentHour = (minuteOfDay % ClockArc.TURN) / 60;
@@ -87,8 +85,9 @@ module TimeRing {
         return positions;
     }
 
-    //! An encre stroke across the arc at each of `positions`, twice the arc's
-    //! width, reaching as far either side of the track as the hour bar does.
+    //! An _encre_ stroke across the arc at each of `positions`, twice the
+    //! arc's width, reaching as far either side of the track as the hour bar
+    //! does.
     function quarterGaps(layout as Layout, radius as Float, positions as Array<Float>) as Array<Shapes.Shape> {
         var shapes = [] as Array<Shapes.Shape>;
         var innerRadius = radius - layout.capReach;
@@ -99,9 +98,9 @@ module TimeRing {
         return shapes;
     }
 
-    //! A thin brume tick inside each gap `quarterGaps` cuts, marking the
-    //! quarter itself. Dropped from the Always-On scene along with the rest
-    //! of brume.
+    //! A thin _brume_ tick inside each gap `quarterGaps` cuts, marking the
+    //! quarter itself. Not included in `aodScene`, since _brume_ is dropped
+    //! there to stay inside the low-power luminance budget.
     function quarterTicks(layout as Layout, radius as Float, positions as Array<Float>) as Array<Shapes.Shape> {
         var shapes = [] as Array<Shapes.Shape>;
         var innerRadius = radius - layout.capReach;

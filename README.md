@@ -130,10 +130,9 @@ source/Render.mc                 # the only code that draws
 
 ## Always-On Display
 
-On AMOLED devices with Always-On enabled, `BoussoleView` swaps in
-`TimeRing.aodScene` while asleep: just the time arc and hour bar, dimmed
-from _craie_ to _brume_, with everything else dropped except the encre quarter
-gaps (they subtract lit pixels, so they're free to keep).
+While asleep on AMOLED devices with Always-On enabled, `BoussoleView` swaps
+in the pared-back scene from `TimeRing.aodScene` (see its doc comment for
+what changes and why).
 
 Verified with the simulator's heat map (**File → View Screen Heat Map**):
 no burn-in, peak luminance under 3%.

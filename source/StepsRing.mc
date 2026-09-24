@@ -1,7 +1,7 @@
 import Toybox.Lang;
 
-//! Steps, in the same style as the clock rings: a brume arc with its hour bar
-//! anchored at XII, filling clockwise towards today's step goal.
+//! Steps, in the same style as the clock rings: a _brume_ arc with its hour
+//! bar anchored at XII, filling clockwise towards today's step goal.
 module StepsRing {
 
     function scene(layout as Layout, steps as Number, goal as Number) as Array<Shapes.Shape> {

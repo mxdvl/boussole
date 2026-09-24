@@ -1,10 +1,18 @@
 import Toybox.Lang;
 import Toybox.Math;
 
-//! Sunrise/sunset for a date and location, via the standard "sunrise equation"
-//! (NOAA/Wikipedia). Pure math, no I/O. Longitude is east-positive (as returned
-//! by `Position`), latitude north-positive. Times are Unix seconds (UTC) until
-//! `nextEvent` converts them to a local time of day.
+//! Sunrise/sunset for a date and location. Pure math, no I/O. Longitude is
+//! east-positive (as returned by `Position`), latitude north-positive. Times
+//! are Unix seconds (UTC) until `nextEvent` converts them to a local time of
+//! day.
+//!
+//! `riseSet` ports the day-number / mean-anomaly / equation-of-centre
+//! algorithm from Astronomy Answers, "Position of the Sun", §2–§10:
+//! https://www.aa.quae.nl/en/reken/zonpositie.html
+//! Variable names match that page's terms, so the two can be read side by
+//! side. For the underlying geometry (hour angle, declination, sign
+//! conventions) see Wikipedia's "Sunrise equation":
+//! https://en.wikipedia.org/wiki/Sunrise_equation
 module SunCalc {
 
     const DEG = Math.PI / 180.0;  // radians per degree
@@ -55,30 +63,35 @@ module SunCalc {
         return unixSeconds / 86400.0 + 2440587.5;
     }
 
-    //! Sunrise and sunset for the solar day containing `julianDate`.
+    //! Sunrise and sunset for the solar day containing `julianDate`. Follows
+    //! Astronomy Answers §2–§10 (see module doc) step for step.
     //! Returns { :rise => Double, :set => Double } in Unix seconds, or null when
     //! the sun neither rises nor sets that day (polar day/night).
     function riseSet(julianDate as Double, latDeg as Double, lonDeg as Double) as Dictionary<Symbol, Double>? {
         var dayNumber = ((julianDate - 2451545.0 + 0.0008) + 0.5).toNumber().toDouble();
 
         var meanNoon = dayNumber + lonDeg / 360.0;
-        var meanAnomaly = mod360(357.5291 + 0.98560028 * meanNoon);  // deg
+        var meanAnomaly = mod360(357.5291 + 0.98560028 * meanNoon);  // deg, §2
         var meanAnomalyRad = meanAnomaly * DEG;
 
-        var equationOfCentre = 1.9148 * Math.sin(meanAnomalyRad)
+        var equationOfCentre = 1.9148 * Math.sin(meanAnomalyRad)  // §3
             + 0.02 * Math.sin(2.0 * meanAnomalyRad)
             + 0.0003 * Math.sin(3.0 * meanAnomalyRad);
-        var eclipticLongitude = mod360(meanAnomaly + equationOfCentre + 282.9372);  // deg
+        // 282.9372 = 180 + 102.9372, the Sun's argument of perihelion (§4).
+        var eclipticLongitude = mod360(meanAnomaly + equationOfCentre + 282.9372);  // deg, §5
         var eclipticLongitudeRad = eclipticLongitude * DEG;
 
-        var transit = 2451545.0 + meanNoon
+        var transit = 2451545.0 + meanNoon  // §8
             + 0.0053 * Math.sin(meanAnomalyRad)
             - 0.0069 * Math.sin(2.0 * eclipticLongitudeRad);
 
-        var sinDeclination = Math.sin(eclipticLongitudeRad) * Math.sin(23.4397 * DEG);
+        // 23.4397 deg is Earth's obliquity of the ecliptic (§4).
+        var sinDeclination = Math.sin(eclipticLongitudeRad) * Math.sin(23.4397 * DEG);  // §6
         var cosDeclination = Math.sqrt(1.0 - sinDeclination * sinDeclination);
 
         var latRad = latDeg * DEG;
+        // -0.833 deg is the Sun's altitude at sunrise/sunset once atmospheric
+        // refraction and its apparent radius are accounted for (§10).
         var cosHourAngle = (Math.sin(-0.833 * DEG) - Math.sin(latRad) * sinDeclination)
             / (Math.cos(latRad) * cosDeclination);
         if (cosHourAngle > 1.0 || cosHourAngle < -1.0) {

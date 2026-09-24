@@ -16,10 +16,9 @@ import Toybox.WatchUi;
 //!        StepsRing  progress towards the step goal, bar anchored at XII
 //!   3. `Render` draws the scene
 //!
-//! Always-On Display: while asleep on a device that `requiresBurnInProtection`
-//! (AMOLED with Always-On enabled, e.g. Venu 4), the scene is pared back to
-//! just `TimeRing.aodScene` - the time arc and hour bar, dimmed from craie to
-//! brume, with every other element dropped.
+//! While asleep on a device that requires AMOLED burn-in protection,
+//! `onUpdate` builds the scene from `TimeRing.aodScene` instead of
+//! `fullScene` - see there for what that drops.
 class BoussoleView extends WatchUi.WatchFace {
 
     private const DEFAULT_STEP_GOAL = 10000;
@@ -30,6 +29,8 @@ class BoussoleView extends WatchUi.WatchFace {
         WatchFace.initialize();
     }
 
+    //! No fixed drawables: Layout derives all geometry from the screen size
+    //! fresh on every onUpdate instead.
     function onLayout(dc as Graphics.Dc) as Void {
     }
 
@@ -61,11 +62,17 @@ class BoussoleView extends WatchUi.WatchFace {
         return scene;
     }
 
+    //! Tracks power state for onUpdate's Always-On branch. requestUpdate()
+    //! forces an immediate redraw in the new state, rather than waiting for
+    //! the next scheduled tick.
     function onEnterSleep() as Void {
         sleeping = true;
         WatchUi.requestUpdate();
     }
 
+    //! Tracks power state for onUpdate's Always-On branch. requestUpdate()
+    //! forces an immediate redraw in the new state, rather than waiting for
+    //! the next scheduled tick.
     function onExitSleep() as Void {
         sleeping = false;
         WatchUi.requestUpdate();
