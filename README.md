@@ -90,7 +90,7 @@ source/BoussoleApp.mc            # Application entry point
 source/BoussoleView.mc           # reads the device, builds the scene, renders it
 source/Layout.mc                 # track radii and polar maths, from screen size
 source/Shapes.mc                 # plain drawing records (Arc, Line, Dot)
-source/Palette.mc                # named colours (craie, brume)
+source/Palette.mc                # named colours (craie, encre, brume)
 source/ClockArc.mc               # pure: one time as an arc between the hands + hour bar
 source/TimeRing.mc               # pure: current time, hour points, numerals
 source/SunRing.mc                # pure: next sunrise or sunset as a clock arc

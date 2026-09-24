@@ -5,7 +5,7 @@ import Toybox.Lang;
 //!
 //! - Uncovered points: XII, III, VI and IX as numerals, dots for the rest.
 //! - Points the arc covers (ends included) are not drawn, except the quarters,
-//!   which keep a brume dot on top of the arc so the dial stays readable.
+//!   which keep an encre dot cut into the arc so the dial stays readable.
 //! - The current hour's point is left to its bar.
 module TimeRing {
 
@@ -44,7 +44,7 @@ module TimeRing {
         return shapes;
     }
 
-    //! Brume dots on top of the arc at the quarters it covers, except the
+    //! Encre dots cut into the arc at the quarters it covers, except the
     //! current hour's.
     function quarterDots(
         layout as Layout, start as Float, sweep as Float, currentHour as Number
@@ -55,7 +55,7 @@ module TimeRing {
             if (hour != currentHour && isCovered(position, start, sweep)) {
                 shapes.add(new Shapes.Dot(
                     layout.xAt(layout.timeRadius, position), layout.yAt(layout.timeRadius, position),
-                    layout.penWidth / 2.0, Palette.BRUME
+                    layout.penWidth / 2.0, Palette.ENCRE
                 ));
             }
         }

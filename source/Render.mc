@@ -10,7 +10,7 @@ module Render {
         if (dc has :setAntiAlias) {
             dc.setAntiAlias(true);
         }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+        dc.setColor(Palette.CRAIE, Palette.ENCRE);
         dc.clear();
 
         for (var index = 0; index < scene.size(); index++) {
