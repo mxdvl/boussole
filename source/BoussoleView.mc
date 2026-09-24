@@ -15,9 +15,16 @@ import Toybox.WatchUi;
 //!        SunRing    the next sunrise or sunset as a `ClockArc`
 //!        StepsRing  progress towards the step goal, bar anchored at XII
 //!   3. `Render` draws the scene
+//!
+//! Always-On Display: while asleep on a device that `requiresBurnInProtection`
+//! (AMOLED with Always-On enabled, e.g. Venu 4), the scene is pared back to
+//! just `TimeRing.aodScene` - the time arc and hour bar, dimmed from craie to
+//! brume, with every other element dropped.
 class BoussoleView extends WatchUi.WatchFace {
 
     private const DEFAULT_STEP_GOAL = 10000;
+
+    private var sleeping as Boolean = false;
 
     function initialize() {
         WatchFace.initialize();
@@ -28,21 +35,48 @@ class BoussoleView extends WatchUi.WatchFace {
 
     function onUpdate(dc as Graphics.Dc) as Void {
         var clock = System.getClockTime();
-        var activity = ActivityMonitor.getInfo();
-        var location = Position.getInfo().position;
+        var minuteOfDay = clock.hour * 60 + clock.min;
+        var lowPower = sleeping && burnInProtected();
 
+        // Always redraw the whole screen: several real devices clear the Dc
+        // before calling onUpdate (the simulator doesn't), so skipping this
+        // when nothing appears to have changed can leave the display blank.
         var layout = new Layout(dc.getWidth(), dc.getHeight());
-        var scene = StepsRing.scene(layout, orZero(activity.steps), stepGoal(activity.stepGoal));
-        scene.addAll(SunRing.scene(layout, nextSunEvent(location, clock.timeZoneOffset)));
-        scene.addAll(TimeRing.scene(layout, clock.hour * 60 + clock.min));
+        var scene = lowPower
+            ? TimeRing.aodScene(layout, minuteOfDay)
+            : fullScene(layout, minuteOfDay, clock.timeZoneOffset);
 
         Render.draw(dc, scene);
     }
 
+    //! The normal scene: steps, the next sun event, and the current time.
+    private function fullScene(
+        layout as Layout, minuteOfDay as Number, utcOffset as Number
+    ) as Array<Shapes.Shape> {
+        var activity = ActivityMonitor.getInfo();
+        var location = Position.getInfo().position;
+        var scene = StepsRing.scene(layout, orZero(activity.steps), stepGoal(activity.stepGoal));
+        scene.addAll(SunRing.scene(layout, nextSunEvent(location, utcOffset)));
+        scene.addAll(TimeRing.scene(layout, minuteOfDay));
+        return scene;
+    }
+
     function onEnterSleep() as Void {
+        sleeping = true;
+        WatchUi.requestUpdate();
     }
 
     function onExitSleep() as Void {
+        sleeping = false;
+        WatchUi.requestUpdate();
+    }
+
+    //! Whether low-power redraws on this device must stay within the AMOLED
+    //! burn-in budget (false on devices without Always-On, which just turn
+    //! their screen off instead of calling `onUpdate` while asleep).
+    private function burnInProtected() as Boolean {
+        var settings = System.getDeviceSettings();
+        return (settings has :requiresBurnInProtection) && settings.requiresBurnInProtection;
     }
 
     private function orZero(value as Number?) as Number {

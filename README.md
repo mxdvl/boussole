@@ -120,7 +120,7 @@ source/Layout.mc                 # track radii and polar maths, from screen size
 source/Shapes.mc                 # plain drawing records (Arc, Line, Dot)
 source/Palette.mc                # named colours (craie, encre, brume)
 source/ClockArc.mc               # pure: one time as an arc between the hands + hour bar
-source/TimeRing.mc               # pure: current time, hour points, numerals
+source/TimeRing.mc               # pure: current time, hour points, numerals; the Always-On scene
 source/SunRing.mc                # pure: next sunrise or sunset as a clock arc
 source/StepsRing.mc              # pure: steps ring, anchored at XII
 source/Numerals.mc               # pure: roman numerals as strokes
@@ -128,9 +128,16 @@ source/SunCalc.mc                # pure: sunrise equation + next sun event
 source/Render.mc                 # the only code that draws
 ```
 
+## Always-On Display
+
+On AMOLED devices with Always-On enabled, `BoussoleView` swaps in
+`TimeRing.aodScene` while asleep: just the time arc and hour bar, dimmed
+from _craie_ to _brume_, with everything else dropped except the encre quarter
+gaps (they subtract lit pixels, so they're free to keep).
+
+Verified with the simulator's heat map (**File → View Screen Heat Map**):
+no burn-in, peak luminance under 3%.
+
 ## Notes / next steps
 
-- The Venu 4 is AMOLED. For always-on display support you'll later want
-  burn-in protection (a low-color, low-pixel "always-on" variant drawn in
-  `onUpdate` when the device is in low-power mode). Not needed for this
-  first step, which updates once per minute.
+- Nothing outstanding right now.
