@@ -2,10 +2,11 @@
 
 A custom Garmin Connect IQ **watch face**, built with the Monkey C SDK.
 
-Current state: concentric rings — a time arc near the rim between the (pinned)
-hour hand and the minute hand, which fills on one 65-minute lap and empties on
-the next, with stroke-drawn XII/III/VI/IX just inside it; and a steps arc
-further in.
+Current state: concentric rings. Near the rim, the current time as an arc
+between the (pinned) hour hand and the minute hand, which fills on one
+65-minute lap and empties on the next, with a bar across the hour end and
+stroke-drawn XII/III/VI/IX on its track. Inside it, the next sunrise and
+sunset in the same style, then a steps arc.
 Named _boussole_ ("compass" in French) —
 the design will grow toward a compass theme.
 
@@ -89,10 +90,13 @@ source/BoussoleApp.mc            # Application entry point
 source/BoussoleView.mc           # reads the device, builds the scene, renders it
 source/Layout.mc                 # track radii and polar maths, from screen size
 source/Shapes.mc                 # plain drawing records (Arc, Line, Dot)
+source/Palette.mc                # named colours (chalk, brume)
+source/ClockArc.mc               # pure: one time as an arc between the hands + hour bar
+source/TimeRing.mc               # pure: current time, hour points, numerals
+source/SunRings.mc               # pure: next sunrise and sunset as clock arcs
 source/StepsRing.mc              # pure: inner steps arc
-source/TimeRing.mc               # pure: arc between the hands, hour points, hour cap, sun marker
 source/Numerals.mc               # pure: roman numerals as strokes
-source/SunCalc.mc                # pure: sunrise equation + next sun event
+source/SunCalc.mc                # pure: sunrise equation + upcoming sunrise/sunset
 source/Render.mc                 # the only code that draws
 ```
 

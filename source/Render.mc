@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 
 //! The only code that draws: turns a scene (an array of `Shapes`) into pixels,
 //! in order, on a cleared black screen.
@@ -46,12 +47,10 @@ module Render {
     }
 
     //! A fraction of a turn clockwise from 12 o'clock, as the Dc's angle:
-    //! degrees counter-clockwise from 3 o'clock, in [0, 360).
-    function degrees(fraction as Float) as Float {
-        var angle = 90.0 - fraction * 360.0;
-        while (angle < 0.0) {
-            angle += 360.0;
-        }
-        return angle;
+    //! whole degrees counter-clockwise from 3 o'clock, in [0, 360). Rounded
+    //! here rather than left for the Dc to truncate.
+    function degrees(fraction as Float) as Number {
+        var angle = Math.round(90.0 - fraction * 360.0).toNumber();
+        return ((angle % 360) + 360) % 360;
     }
 }

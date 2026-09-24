@@ -4,53 +4,57 @@ import Toybox.Math;
 //! Sunrise/sunset for a date and location, via the standard "sunrise equation"
 //! (NOAA/Wikipedia). Pure math, no I/O. Longitude is east-positive (as returned
 //! by `Position`), latitude north-positive. Times are Unix seconds (UTC) until
-//! `nextEvent` converts them to a local time of day.
+//! `upcoming` converts them to local times of day.
 module SunCalc {
 
     const DEG = Math.PI / 180.0;  // radians per degree
 
-    //! A sunrise or sunset, at a local time of day.
-    class Event {
-        public var minuteOfDay as Number;
-        public var isSunrise as Boolean;
+    //! The upcoming sunrise and sunset as local times of day (minutes,
+    //! 0-1439). Either is null when the sun doesn't rise or set (polar
+    //! day/night).
+    class Times {
+        public var sunrise as Number?;
+        public var sunset as Number?;
 
-        function initialize(minuteOfDay as Number, isSunrise as Boolean) {
-            self.minuteOfDay = minuteOfDay;
-            self.isSunrise = isSunrise;
+        function initialize(sunrise as Number?, sunset as Number?) {
+            self.sunrise = sunrise;
+            self.sunset = sunset;
         }
     }
 
-    //! The next sun event after `nowUnix` at (`latDeg`, `lonDeg`): today's
-    //! sunrise, else today's sunset, else tomorrow's sunrise. `utcOffset` is
-    //! the local offset in seconds (DST included), used for the time of day.
-    //! Null during polar day/night.
-    function nextEvent(nowUnix as Double, latDeg as Double, lonDeg as Double, utcOffset as Number) as Event? {
+    //! The next sunrise and the next sunset after `nowUnix` at (`latDeg`,
+    //! `lonDeg`): today's if still to come, else tomorrow's. `utcOffset` is the
+    //! local offset in seconds (DST included), used for the time of day.
+    function upcoming(nowUnix as Double, latDeg as Double, lonDeg as Double, utcOffset as Number) as Times {
         var julianDate = julian(nowUnix);
         var today = riseSet(julianDate, latDeg, lonDeg);
-        if (today == null) {
-            return null;
-        }
-        var rise = today[:rise];
-        var set = today[:set];
-        if (rise == null || set == null) {
-            return null;
-        }
-        if (nowUnix < rise) {
-            return new Event(localMinuteOfDay(rise, utcOffset), true);
-        }
-        if (nowUnix < set) {
-            return new Event(localMinuteOfDay(set, utcOffset), false);
-        }
-
         var tomorrow = riseSet(julianDate + 1.0, latDeg, lonDeg);
-        if (tomorrow == null) {
-            return null;
+        return new Times(
+            nextOf(:rise, nowUnix, today, tomorrow, utcOffset),
+            nextOf(:set, nowUnix, today, tomorrow, utcOffset)
+        );
+    }
+
+    //! Today's `event` (:rise or :set) if it is still to come, else
+    //! tomorrow's, as a local minute of the day.
+    function nextOf(
+        event as Symbol, nowUnix as Double,
+        today as Dictionary<Symbol, Double>?, tomorrow as Dictionary<Symbol, Double>?,
+        utcOffset as Number
+    ) as Number? {
+        if (today != null) {
+            var moment = today[event];
+            if (moment != null && nowUnix < moment) {
+                return localMinuteOfDay(moment, utcOffset);
+            }
         }
-        var nextRise = tomorrow[:rise];
-        if (nextRise == null) {
-            return null;
+        if (tomorrow != null) {
+            var moment = tomorrow[event];
+            if (moment != null) {
+                return localMinuteOfDay(moment, utcOffset);
+            }
         }
-        return new Event(localMinuteOfDay(nextRise, utcOffset), true);
+        return null;
     }
 
     //! Local minute of the day (0-1439) for a moment in Unix seconds.
