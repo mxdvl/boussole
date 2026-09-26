@@ -100,7 +100,6 @@ class BoussoleView extends WatchUi.WatchFace {
         if (location == null) {
             return null;
         }
-        var degrees = location.toDegrees();
-        return SunCalc.nextEvent(Time.now().value().toDouble(), degrees[0], degrees[1], utcOffset);
+        return SunCalc.nextEvent(Time.now(), location, utcOffset);
     }
 }
