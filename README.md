@@ -61,6 +61,22 @@ In the simulator, pick a watch face via **Settings** if it doesn't show
 automatically. Use **File → Time** to fast-forward the clock and watch the
 hands move.
 
+## Tests
+
+Run the sunrise/sunset regression tests in the Connect IQ simulator using
+the same SDK and signing-key prerequisites as a normal build:
+
+```sh
+mkdir -p bin/tests
+monkeyc -o bin/tests/boussole.prg -f monkey.jungle -y developer_key.der -d venu445mm -w -l 3 -t
+connectiq
+monkeydo bin/tests/boussole.prg venu445mm -t
+```
+
+These tests cover longitude direction, UTC midnight, advancing past sunset,
+local-time conversion, the date line, and polar day/night. Test code is
+excluded from normal and release builds.
+
 ## Install on the watch
 
 The Venu 4 connects over USB as an MTP device, not as a drive, so macOS
