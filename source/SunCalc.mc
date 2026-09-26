@@ -1,6 +1,7 @@
 import Toybox.Lang;
 import Toybox.Position;
 import Toybox.Time;
+import Toybox.Time.Gregorian;
 import Toybox.Weather;
 
 //! Next sunrise/sunset for a moment and location, via Garmin's on-device
@@ -12,10 +13,10 @@ import Toybox.Weather;
 module SunCalc {
 
     //! The next sunrise or sunset after `now`, whichever comes first, as a
-    //! local minute of the day (0-1439). `utcOffset` is the local offset in
-    //! seconds (DST included). Null when Weather has neither event for
-    //! either day (polar day/night) or can't compute one for this location.
-    function nextEvent(now as Time.Moment, location as Position.Location, utcOffset as Number) as Number? {
+    //! minute of the day (0-1439) in the watch's local timezone at the event.
+    //! Null when Weather has neither event for either day (polar day/night)
+    //! or can't compute one for this location.
+    function nextEvent(now as Time.Moment, location as Position.Location) as Number? {
         var tomorrow = now.add(new Time.Duration(86400));
         var candidates = [
             Weather.getSunrise(location, now),
@@ -25,7 +26,7 @@ module SunCalc {
         ] as Array<Time.Moment?>;
 
         var nowSeconds = now.value();
-        var soonest = null as Number?;
+        var soonest = null as Time.Moment?;
         for (var index = 0; index < candidates.size(); index++) {
             var moment = candidates[index];
             if (moment == null) {
@@ -35,15 +36,16 @@ module SunCalc {
             if (seconds <= nowSeconds) {
                 continue;
             }
-            if (soonest == null || seconds < soonest) {
-                soonest = seconds;
+            if (soonest == null || seconds < soonest.value()) {
+                soonest = moment;
             }
         }
-        return soonest != null ? localMinuteOfDay(soonest, utcOffset) : null;
-    }
+        if (soonest == null) {
+            return null;
+        }
 
-    //! Local minute of the day (0-1439) for a moment given in Unix seconds.
-    function localMinuteOfDay(unixSeconds as Number, utcOffset as Number) as Number {
-        return ((unixSeconds + utcOffset) / 60) % 1440;
+        // Let Garmin apply the watch's timezone rules at the event's date.
+        var local = Gregorian.info(soonest, Time.FORMAT_SHORT);
+        return local.hour * 60 + local.min;
     }
 }
