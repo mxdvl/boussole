@@ -109,15 +109,32 @@ To update, rebuild and repeat steps 2–5: the new file replaces the old one.
 ## Releasing
 
 [`.github/workflows/build.yml`](.github/workflows/build.yml) builds the store
-package (`.iq`, one build per device in `manifest.xml`):
+package (`.iq`, one build per device in `manifest.xml`).
 
-- **On a published GitHub release**, it attaches `boussole-<tag>.iq` to the
-  release. Download it and upload it in the Connect IQ developer dashboard;
-  Garmin has no API for publishing, and every version goes through their
-  review anyway.
-- **On every push to `main`**, it runs the same build and keeps the `.iq` as a
-  workflow artifact. That checks each merge still compiles for every device,
-  and keeps the SDK and device downloads cached for the next release.
+To release, tag the commit and push the tag:
+
+```sh
+git tag v0.0.2
+git push origin v0.0.2
+```
+
+The workflow builds `boussole-v0.0.2.iq` and creates a **draft** release for
+the tag with the file attached and generated notes. Check the draft, edit the
+notes, then publish it. Download the `.iq` from the release and upload it in
+the Connect IQ developer dashboard (Garmin has no API for publishing, and
+every version goes through their review anyway).
+
+With **immutable releases** turned on (Settings → General → Releases), the
+published release, its `.iq` and its tag can no longer change, so the file on
+the release is exactly what was built from that tag. That's why the build
+starts from the tag rather than from publishing a release: an immutable
+release can't take new assets once published. To stop `v*` tags being moved
+or deleted before they're released too, add a tag ruleset (Settings → Rules →
+Rulesets) that blocks updates and deletions for `refs/tags/v*`.
+
+On every push to `main`, the workflow runs the same build and keeps the `.iq`
+as a workflow artifact. That checks each merge still compiles for every
+device, and keeps the SDK and device downloads cached for the next release.
 
 One-time setup, in the repository's **Settings → Secrets and variables →
 Actions**:

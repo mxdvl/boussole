@@ -2,11 +2,14 @@ name: Build
 
 # Builds the store package (.iq) for every device in manifest.xml.
 #
-# - On a published GitHub release: attaches boussole-<tag>.iq to the release,
-#   ready to upload to the Connect IQ Store by hand.
+# - On a pushed version tag (v*): creates a *draft* GitHub release for the tag
+#   with boussole-<tag>.iq attached. Publishing the draft is left to you; with
+#   immutable releases turned on, that freezes the release, its asset and its
+#   tag. (Assets can't be added to a published immutable release, which is why
+#   the build starts from the tag rather than from publishing a release.)
 # - On pushes to main: the same build, kept as a workflow artifact. This checks
 #   every merge still compiles and keeps the SDK/device cache warm: caches made
-#   on main are the only ones a release (which runs on its tag) can reuse.
+#   on main are the only ones a tag run can reuse.
 #
 # Needs these repository secrets (see README → Releasing):
 #   GARMIN_USERNAME, GARMIN_PASSWORD  Garmin account for the SDK manager
@@ -17,16 +20,15 @@ name: Build
 on:
   push:
     branches: [main]
-  release:
-    types: [published]
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
-  contents: write # attach the .iq to the release
+  contents: write # create the draft release
 
 concurrency:
   group: build-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'push' }}
+  cancel-in-progress: ${{ github.ref_type == 'branch' }}
 
 env:
   SDK_VERSION: "9.2.0"
@@ -82,8 +84,8 @@ jobs:
       - name: Name the build
         id: name
         run: |
-          if [ "${{ github.event_name }}" = release ]; then
-            echo "version=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            echo "version=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
           else
             echo "version=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
           fi
@@ -108,10 +110,21 @@ jobs:
           name: boussole-${{ steps.name.outputs.version }}
           path: bin/boussole-${{ steps.name.outputs.version }}.iq
 
-      - name: Attach to the release
-        if: github.event_name == 'release'
+      # A new tag gets a new draft release with the .iq attached. An existing
+      # draft (say, one you started by hand) gets the .iq added or replaced. A
+      # published release is left alone: if it's immutable it can't change.
+      - name: Draft the release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          IQ: bin/boussole-${{ steps.name.outputs.version }}.iq
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" \
-            "bin/boussole-${{ steps.name.outputs.version }}.iq" --clobber
+          if ! gh release view "$TAG" --json isDraft > release.json 2>/dev/null; then
+            gh release create "$TAG" "$IQ" --draft --verify-tag --title "$TAG" --generate-notes
+          elif [ "$(jq -r .isDraft release.json)" = true ]; then
+            gh release upload "$TAG" "$IQ" --clobber
+          else
+            echo "::error::Release $TAG is already published; attach the .iq from this run's artifact, or cut a new tag."
+            exit 1
+          fi
