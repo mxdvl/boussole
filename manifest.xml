@@ -21,6 +21,7 @@
         -->
         <iq:products>
             <iq:product id="venu445mm"/>
+            <iq:product id="fr970"/>
         </iq:products>
 
         <!-- Positioning: read the last known location for sunrise/sunset. -->
