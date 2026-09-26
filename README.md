@@ -14,8 +14,9 @@ the design will grow toward a compass theme.
 ## Target devices
 
 - `venu445mm` — Venu 4, 45 mm, 454 × 454 round AMOLED
+- `fr970` — Forerunner 970, 454 × 454 round AMOLED
 
-Install this device image from the **Connect IQ SDK Manager → Devices** tab
+Install the device image for your target from the **Connect IQ SDK Manager → Devices** tab
 before building/simulating.
 
 ## Prerequisites
@@ -28,7 +29,7 @@ fish_add_path /opt/homebrew/opt/openjdk/bin
 fish_add_path "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq-sdk-mac-9.2.0-2026-06-09-92a1605b2/bin"
 ```
 
-- The `venu445mm` device image, installed via **SDK Manager → Devices**.
+- The `venu445mm` or `fr970` device image, installed via **SDK Manager → Devices**.
 - `developer_key.der` in the project root (already generated; git-ignored).
 
 ## Build & run
@@ -36,8 +37,13 @@ fish_add_path "$HOME/Library/Application Support/Garmin/ConnectIQ/Sdks/connectiq
 One command builds and side-loads into the simulator:
 
 ```sh
-./run.sh
+./run.sh          # Venu 4, 45 mm (default)
+./run.sh fr970    # Forerunner 970
 ```
+
+Both devices use the same layout and Always-On Display handling. To rebuild
+and reload automatically when editing, run `./watch.sh fr970` (or `./watch.sh`
+for the Venu 4).
 
 Or manually:
 
@@ -47,6 +53,9 @@ monkeyc -o bin/boussole.prg -f monkey.jungle -y developer_key.der -d venu445mm -
 connectiq                       # launch the simulator (once)
 monkeydo bin/boussole.prg venu445mm
 ```
+
+For the Forerunner 970, replace `venu445mm` with `fr970` in both commands.
+Each build replaces `bin/boussole.prg` with the version for the selected device.
 
 In the simulator, pick a watch face via **Settings** if it doesn't show
 automatically. Use **File → Time** to fast-forward the clock and watch the
@@ -64,6 +73,8 @@ files across.
    mkdir -p bin
    monkeyc -o bin/boussole.prg -f monkey.jungle -y developer_key.der -d venu445mm -r -w -l 3
    ```
+
+   Use `-d fr970` instead when building for the Forerunner 970.
 
 2. Plug the watch in with its USB cable and open **OpenMTP.app**. Quit Garmin
    Express first if it's running, since it can hold the connection.

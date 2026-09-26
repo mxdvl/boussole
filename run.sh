@@ -2,11 +2,12 @@
 # Build the watch face and load it into the Connect IQ simulator.
 #
 # Usage:
-#   ./run.sh                 # build for the real target (venu445mm)
+#   ./run.sh                 # build for Venu 4, 45 mm (default)
+#   ./run.sh fr970           # build for Forerunner 970
 #   ./run.sh vivoactive6     # preview on another installed device
 #
 # A device that isn't listed in manifest.xml is built from a temporary copy,
-# so the committed manifest stays Venu 4-only (handy for previewing on a
+# so the committed manifest keeps only supported targets (handy for previewing on a
 # device you already have installed while waiting for the real one).
 #
 # Requires on PATH: monkeyc, connectiq, monkeydo (Connect IQ SDK bin/) + JDK.

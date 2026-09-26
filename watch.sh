@@ -8,6 +8,7 @@
 #
 # Usage:
 #   ./watch.sh                 # target venu445mm
+#   ./watch.sh fr970           # target Forerunner 970
 #   ./watch.sh vivoactive5     # any installed device
 set -eu
 
