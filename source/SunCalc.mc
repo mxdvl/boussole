@@ -20,37 +20,32 @@ module SunCalc {
     //! The next sunrise or sunset after `nowUnix` at (`latDeg`, `lonDeg`),
     //! whichever comes first, as a local minute of the day (0-1439).
     //! `utcOffset` is the local offset in seconds (DST included). Null when
-    //! the sun neither rises nor sets (polar day/night).
+    //! no future event exists in the neighbouring solar cycles (polar day/night).
     function nextEvent(nowUnix as Double, latDeg as Double, lonDeg as Double, utcOffset as Number) as Number? {
         var julianDate = julian(nowUnix);
-        var today = riseSet(julianDate, latDeg, lonDeg);
-        var tomorrow = riseSet(julianDate + 1.0, latDeg, lonDeg);
-        var sunrise = nextOf(:rise, nowUnix, today, tomorrow);
-        var sunset = nextOf(:set, nowUnix, today, tomorrow);
+        var soonest = null as Double?;
+        var events = [:rise, :set];
 
-        var soonest = sunrise;
-        if (soonest == null || (sunset != null && sunset < soonest)) {
-            soonest = sunset;
-        }
-        return soonest != null ? localMinuteOfDay(soonest, utcOffset) : null;
-    }
-
-    //! Today's `event` (:rise or :set) in Unix seconds if it is still to come,
-    //! else tomorrow's.
-    function nextOf(
-        event as Symbol, nowUnix as Double,
-        today as Dictionary<Symbol, Double>?, tomorrow as Dictionary<Symbol, Double>?
-    ) as Double? {
-        if (today != null) {
-            var moment = today[event];
-            if (moment != null && nowUnix < moment) {
-                return moment;
+        // A solar cycle can cross a UTC date boundary, especially far from
+        // Greenwich or at high latitudes. Include the previous cycle so its
+        // still-upcoming sunset is not lost at midnight; compare full UTC
+        // timestamps before converting the winning event to local time.
+        for (var offset = -1; offset <= 1; offset++) {
+            var cycle = riseSet(julianDate + offset, latDeg, lonDeg);
+            if (cycle == null) {
+                continue;
+            }
+            for (var index = 0; index < events.size(); index++) {
+                var moment = cycle[events[index]];
+                if (moment == null || moment <= nowUnix) {
+                    continue;
+                }
+                if (soonest == null || moment < soonest) {
+                    soonest = moment;
+                }
             }
         }
-        if (tomorrow != null) {
-            return tomorrow[event];
-        }
-        return null;
+        return soonest != null ? localMinuteOfDay(soonest, utcOffset) : null;
     }
 
     //! Local minute of the day (0-1439) for a moment in Unix seconds.
@@ -63,14 +58,19 @@ module SunCalc {
         return unixSeconds / 86400.0 + 2440587.5;
     }
 
-    //! Sunrise and sunset for the solar day containing `julianDate`. Follows
-    //! Astronomy Answers §2–§10 (see module doc) step for step.
+    //! Sunrise and sunset for the solar cycle labelled by `julianDate`'s UTC
+    //! calendar date. Either event may fall outside that UTC date. Follows
+    //! Astronomy Answers §2–§10 (see module doc).
     //! Returns { :rise => Double, :set => Double } in Unix seconds, or null when
     //! the sun neither rises nor sets that day (polar day/night).
     function riseSet(julianDate as Double, latDeg as Double, lonDeg as Double) as Dictionary<Symbol, Double>? {
-        var dayNumber = ((julianDate - 2451545.0 + 0.0008) + 0.5).toNumber().toDouble();
+        // Julian dates start at noon; shift by half a day to label cycles
+        // consistently at UTC midnight.
+        var dayNumber = Math.floor(julianDate - 2451545.0 + 0.5).toDouble();
 
-        var meanNoon = dayNumber + lonDeg / 360.0;
+        // The reference uses west-positive longitude. Position supplies
+        // east-positive longitude, so eastward locations have earlier UTC noon.
+        var meanNoon = dayNumber - lonDeg / 360.0;
         var meanAnomaly = mod360(357.5291 + 0.98560028 * meanNoon);  // deg, §2
         var meanAnomalyRad = meanAnomaly * DEG;
 
