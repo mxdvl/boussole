@@ -106,6 +106,35 @@ files across.
 
 To update, rebuild and repeat steps 2–5: the new file replaces the old one.
 
+## Releasing
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) builds the store
+package (`.iq`, one build per device in `manifest.xml`):
+
+- **On a published GitHub release**, it attaches `boussole-<tag>.iq` to the
+  release. Download it and upload it in the Connect IQ developer dashboard;
+  Garmin has no API for publishing, and every version goes through their
+  review anyway.
+- **On every push to `main`**, it runs the same build and keeps the `.iq` as a
+  workflow artifact. That checks each merge still compiles for every device,
+  and keeps the SDK and device downloads cached for the next release.
+
+One-time setup, in the repository's **Settings → Secrets and variables →
+Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `GARMIN_USERNAME` | Garmin account email (used to download the SDK and devices) |
+| `GARMIN_PASSWORD` | its password; the SDK manager can't answer two-factor prompts |
+| `CIQ_DEVELOPER_KEY` | `developer_key.der`, base64-encoded: `base64 -i developer_key.der \| pbcopy` |
+
+Optionally, set the **variable** `CIQ_AGREEMENT_HASH` to the hash printed by
+`connect-iq-sdk-manager agreement view`: the build then fails if Garmin changes
+the licence agreement instead of accepting it silently.
+
+Sign every release with the same developer key: the store rejects updates
+signed with a different one.
+
 ## Editor support
 
 Monkey C's full IntelliSense (completion, go-to-definition, inline API docs,
