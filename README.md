@@ -73,10 +73,23 @@ connectiq
 monkeydo bin/tests/boussole.prg venu445mm -t
 ```
 
-These tests cover local-time conversion, advancing past sunset, and polar
-day/night. The sunrise/sunset calculation itself now comes from Garmin's
+These tests cover advancing past sunset, polar day/night, and displaying
+sun events in the watch's timezone across spring and autumn clock changes.
+Garmin's `Time.Gregorian.info` converts the selected event to local time
+using the watch's timezone rules for that date, independently of the GPS
+location used to calculate sunrise and sunset.
+The sunrise/sunset calculation itself now comes from Garmin's
 on-device `Toybox.Weather.getSunrise`/`getSunset` (API Level 3.3.0), not
 from code in this repo. Test code is excluded from normal and release builds.
+
+Check both `Europe/London` and `UTC` to exercise a timezone with clock
+changes and one without. On macOS, quit the simulator before each launch:
+
+```sh
+open -a "$(dirname "$(command -v connectiq)")/ConnectIQ.app" --env TZ=UTC
+```
+
+Run the tests, then repeat with `TZ=Europe/London`.
 
 ## Install on the watch
 
